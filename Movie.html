@@ -76,7 +76,7 @@ body {
 
 <!-- MOVIE GRID -->
 <div id="grid">
-  <div class="card" onclick="https://www.vidking.net/embed/movie/1084242?nextEpisode=true&episodeSelector=true">
+  <div class="card" onclick="playMovie(1084242)">
     <img src="https://image.tmdb.org/t/p/w500/bjUWGw0Ao0qVWxagN3VCwBJHVo6.jpg">
     <div>Zootopia 2</div>
   </div>
@@ -104,16 +104,19 @@ body {
 
 <script>
 function playMovie(id) {
+  const frame = document.getElementById("frame");
+
+  // Special case: Zootopia 2
+  if (id === 1084242) {
+    frame.src =
+      "https://www.vidking.net/embed/movie/1084242" +
+      "?autoPlay=true&nextEpisode=true&episodeSelector=true";
+  } else {
+    frame.src = "https://www.vidking.net/embed/movie/" + id;
+  }
+
   document.getElementById("grid").style.display = "none";
   document.getElementById("player").style.display = "flex";
-  document.getElementById("frame").src =
-    "https://www.vidking.net/embed/movie/" + id;
-}
-
-function goBackToGrid() {
-  document.getElementById("frame").src = "";
-  document.getElementById("player").style.display = "none";
-  document.getElementById("grid").style.display = "grid";
 }
 </script>
 
