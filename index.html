@@ -8,8 +8,8 @@
 <style>
 :root {
   --bg: #0b0b0f;
-  --panel: #5b2bd6;
   --card: #1b1b24;
+  --panel: #5b2bd6;
   --glow: #7c4dff;
 }
 
@@ -22,44 +22,16 @@ body {
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
 }
 
-/* HEADER */
-header {
-  padding: 16px;
-  text-align: center;
-  font-size: 22px;
-  font-weight: 700;
-  background: #000;
-  border-bottom: 1px solid #222;
-  z-index: 2;
-  position: relative;
-}
-
-/* HERO MAIN PAGE */
+/* MAIN MENU */
 #menu {
-  position: relative;
-  height: calc(100vh - 56px);
-  background: url("https://images.unsplash.com/photo-1524985069026-dd778a71c7b4?q=80&w=1920") center / cover no-repeat;
+  height: 100vh;
   display: flex;
-  align-items: center;
   justify-content: center;
-}
-
-#menu::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: rgba(0,0,0,0.65);
-}
-
-.menu-content {
-  position: relative;
-  display: flex;
-  gap: 20px;
+  align-items: center;
+  gap: 24px;
   flex-wrap: wrap;
-  z-index: 1;
 }
 
-/* MENU BUTTONS */
 .menu-btn {
   width: 220px;
   height: 140px;
@@ -71,138 +43,32 @@ header {
   font-size: 22px;
   font-weight: 600;
   cursor: pointer;
-  transition: transform .2s, box-shadow .2s;
+  transition: transform .2s, box-shadow .2s, background .2s;
 }
 
 .menu-btn:hover {
   transform: scale(1.06);
+  background: var(--panel);
   box-shadow: 0 0 25px var(--glow);
-}
-
-/* PLAY BUTTON */
-#playBtn {
-  position: absolute;
-  bottom: 20px;
-  left: 20px;
-  background: var(--panel);
-  border: none;
-  color: #fff;
-  padding: 10px 14px;
-  border-radius: 999px;
-  cursor: pointer;
-  font-weight: 600;
-  z-index: 1;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-#playBtn:hover {
-  box-shadow: 0 0 18px var(--glow);
-}
-
-/* VIEWER */
-#viewer {
-  display: none;
-  height: calc(100vh - 56px);
-  flex-direction: column;
-}
-
-#topbar {
-  background: var(--panel);
-  padding: 10px;
-  display: flex;
-  align-items: center;
-}
-
-#backBtn {
-  background: #000;
-  border: none;
-  color: #fff;
-  padding: 8px 14px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 600;
-}
-
-#title {
-  margin-left: 12px;
-  font-size: 18px;
-  font-weight: 600;
-}
-
-iframe {
-  flex: 1;
-  width: 100%;
-  border: none;
-  background: #000;
-}
-
-/* FOOTER */
-footer {
-  text-align: center;
-  padding: 12px;
-  font-size: 12px;
-  color: #888;
-  border-top: 1px solid #222;
 }
 </style>
 </head>
 
 <body>
 
-<header>J-TV</header>
-
-<!-- MAIN MENU -->
 <div id="menu">
-  <div class="menu-content">
-    <div class="menu-btn" onclick="openView('Movies', 'https://jbrimz088.github.io/J-TV/Movie')">
-      🎬 Movies
-    </div>
-
-    <div class="menu-btn" onclick="openView('TV Shows', 'https://example.com')">
-      📺 TV Shows
-    </div>
-
-    <div class="menu-btn" onclick="openView('Guide', 'https://example.com')">
-      📅 Guide
-    </div>
-
-    <div class="menu-btn" onclick="openView('Search', 'https://example.com')">
-      🔍 Search
-    </div>
+  <div class="menu-btn" onclick="location.href='movie.html'">
+    🎬 Movies
   </div>
 
-  <!-- PLAY BUTTON -->
-  <button id="playBtn" onclick="openView('Now Playing', 'https://example.com')">
-    ▶ Play
-  </button>
-</div>
-
-<!-- IFRAME VIEW -->
-<div id="viewer">
-  <div id="topbar">
-    <button id="backBtn" onclick="goBack()">← Back</button>
-    <div id="title"></div>
+  <div class="menu-btn" onclick="location.href='tv.html'">
+    📺 TV Shows
   </div>
 
-  <iframe id="frame" src=""></iframe>
+  <div class="menu-btn" onclick="location.href='guide.html'">
+    📅 Guide
+  </div>
 </div>
-
-<script>
-function openView(name, url) {
-  document.getElementById("menu").style.display = "none";
-  document.getElementById("viewer").style.display = "flex";
-  document.getElementById("title").textContent = name;
-  document.getElementById("frame").src = url;
-}
-
-function goBack() {
-  document.getElementById("frame").src = "";
-  document.getElementById("viewer").style.display = "none";
-  document.getElementById("menu").style.display = "flex";
-}
-</script>
 
 </body>
 </html>
