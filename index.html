@@ -2,14 +2,14 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>J-TV</title>
+<title>Movies • J-TV</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
 :root {
   --bg: #0b0b0f;
-  --panel: #5b2bd6;
   --card: #1b1b24;
+  --panel: #5b2bd6;
   --glow: #7c4dff;
 }
 
@@ -24,187 +24,125 @@ body {
 
 /* HEADER */
 header {
-  padding: 16px;
-  text-align: center;
-  font-size: 22px;
-  font-weight: 700;
   background: #000;
-  border-bottom: 1px solid #222;
-  z-index: 2;
-  position: relative;
-}
-
-/* HERO MAIN PAGE */
-#menu {
-  position: relative;
-  height: calc(100vh - 56px);
-  background: url("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR-YciZ5lVGlNmar63x83dNENmccQFcOUoMh_8DlrPbDL96aJsOaA8sHCsrWVaT95Gka8b_CB2sSfNK3Go38hVT0PG2QsEeZwuMwf6eODs8&s=10") center / cover no-repeat;
+  padding: 14px;
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 12px;
 }
 
-#menu::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: rgba(0,0,0,0.65);
-}
-
-.menu-content {
-  position: relative;
-  display: flex;
-  gap: 20px;
-  flex-wrap: wrap;
-  z-index: 1;
-}
-
-/* MENU BUTTONS */
-.menu-btn {
-  width: 220px;
-  height: 140px;
-  background: var(--card);
-  border-radius: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 22px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: transform .2s, box-shadow .2s;
-}
-
-.menu-btn:hover {
-  transform: scale(1.06);
-  box-shadow: 0 0 25px var(--glow);
-}
-
-/* PLAY BUTTON */
-#playBtn {
-  position: absolute;
-  bottom: 20px;
-  left: 20px;
+header button {
   background: var(--panel);
   border: none;
   color: #fff;
-  padding: 10px 14px;
-  border-radius: 999px;
-  cursor: pointer;
-  font-weight: 600;
-  z-index: 1;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-#playBtn:hover {
-  box-shadow: 0 0 18px var(--glow);
-}
-
-/* VIEWER */
-#viewer {
-  display: none;
-  height: calc(100vh - 56px);
-  flex-direction: column;
-}
-
-#topbar {
-  background: var(--panel);
-  padding: 10px;
-  display: flex;
-  align-items: center;
-}
-
-#backBtn {
-  background: #000;
-  border: none;
-  color: #fff;
-  padding: 8px 14px;
+  padding: 8px 12px;
   border-radius: 6px;
   cursor: pointer;
   font-weight: 600;
 }
 
-#title {
-  margin-left: 12px;
-  font-size: 18px;
-  font-weight: 600;
+header h1 {
+  margin: 0;
+  font-size: 20px;
 }
 
-iframe {
+/* MOVIE GRID */
+#grid {
+  padding: 24px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 16px;
+}
+
+.card {
+  background: var(--card);
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform .2s, box-shadow .2s;
+}
+
+.card:hover {
+  transform: scale(1.06);
+  box-shadow: 0 0 18px var(--glow);
+}
+
+.card img {
+  width: 100%;
+  height: 240px;
+  object-fit: cover;
+}
+
+.card div {
+  padding: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* PLAYER VIEW */
+#player {
+  display: none;
+  flex-direction: column;
+  height: calc(100vh - 52px);
+}
+
+#player iframe {
   flex: 1;
   width: 100%;
   border: none;
   background: #000;
-}
-
-/* FOOTER */
-footer {
-  text-align: center;
-  padding: 12px;
-  font-size: 12px;
-  color: #888;
-  border-top: 1px solid #222;
 }
 </style>
 </head>
 
 <body>
 
-<header>J-TV</header>
+<header>
+  <button onclick="goHome()">← Home</button>
+  <h1>Movies</h1>
+</header>
 
-<!-- MAIN MENU -->
-<div id="menu">
-  <div class="menu-content">
-    <div class="menu-btn" onclick="openView('Movies', 'https://www.cineby.gd/browse/movie')">
-      🎬 Movies
-    </div>
-
-    <div class="menu-btn" onclick="openView('TV Shows', 'https://example.com')">
-      📺 TV Shows
-    </div>
-
-    <div class="menu-btn" onclick="openView('Guide', 'https://example.com')">
-      📅 Guide
-    </div>
-
-    <div class="menu-btn" onclick="openView('Search', 'https://example.com')">
-      🔍 Search
-    </div>
+<!-- MOVIE GRID -->
+<div id="grid">
+  <div class="card" onclick="playMovie(1084242)">
+    <img src="https://image.tmdb.org/t/p/w500/bjUWGw0Ao0qVWxagN3VCwBJHVo6.jpg">
+    <div>Zootopia 2</div>
   </div>
 
-  <!-- PLAY BUTTON -->
-  <button id="playBtn" onclick="openView('Now Playing', 'https://example.com')">
-    ▶ Play
-  </button>
-</div>
-
-<!-- IFRAME VIEW -->
-<div id="viewer">
-  <div id="topbar">
-    <button id="backBtn" onclick="goBack()">← Back</button>
-    <div id="title"></div>
+  <div class="card" onclick="playMovie(269149)">
+    <img src="https://image.tmdb.org/t/p/w500/hlK0e0wAQ3VLuJcsfIYPvb4JVud.jpg">
+    <div>Zootopia</div>
   </div>
 
-  <iframe id="frame" src=""></iframe>
+  <div class="card" onclick="playMovie(808)">
+    <img src="https://image.tmdb.org/t/p/w500/iB64vpL3dIObOtMZgX3RqdVdQDc.jpg">
+    <div>Shrek</div>
+  </div>
+
+  <div class="card" onclick="playMovie(24428)">
+    <img src="https://image.tmdb.org/t/p/w500/RYMX2wcKCBAr24UyPD7xwmjaTn.jpg">
+    <div>The Avengers</div>
+  </div>
 </div>
 
-<footer>
-  J-TV · Embedded content hub
-</footer>
+<!-- PLAYER -->
+<div id="player">
+  <iframe id="frame" allowfullscreen></iframe>
+</div>
 
 <script>
-function openView(name, url) {
-  document.getElementById("menu").style.display = "none";
-  document.getElementById("viewer").style.display = "flex";
-  document.getElementById("title").textContent = name;
-  document.getElementById("frame").src = url;
+function playMovie(id) {
+  document.getElementById("grid").style.display = "none";
+  document.getElementById("player").style.display = "flex";
+  document.getElementById("frame").src =
+    "https://www.vidking.net/embed/movie/" + id;
 }
 
-function goBack() {
+function goHome() {
   document.getElementById("frame").src = "";
-  document.getElementById("viewer").style.display = "none";
-  document.getElementById("menu").style.display = "flex";
+  document.getElementById("player").style.display = "none";
+  document.getElementById("grid").style.display = "grid";
 }
 </script>
 
