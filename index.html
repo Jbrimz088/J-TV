@@ -26,72 +26,49 @@ body {
 header {
   padding: 16px;
   text-align: center;
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 700;
   background: #000;
   border-bottom: 1px solid #222;
+  z-index: 2;
+  position: relative;
 }
 
-/* MAIN PAGE */
+/* HERO MAIN PAGE */
 #menu {
-  min-height: calc(100vh - 60px);
-  background-image: url("https://images.unsplash.com/photo-1524985069026-dd778a71c7b4");
-  background-size: cover;
-  background-position: center;
+  position: relative;
+  height: calc(100vh - 56px);
+  background: url("https://images.unsplash.com/photo-1524985069026-dd778a71c7b4?q=80&w=1920") center / cover no-repeat;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 20px;
-  padding: 20px;
 }
 
-/* OVERLAY */
 #menu::before {
   content: "";
   position: absolute;
   inset: 0;
-  background: rgba(0,0,0,0.75);
+  background: rgba(0,0,0,0.65);
 }
 
 .menu-content {
   position: relative;
   display: flex;
-  flex-wrap: wrap;
   gap: 20px;
-  justify-content: center;
-}
-
-/* PLAY BUTTON */
-.play-btn {
-  width: 320px;
-  height: 160px;
-  background: linear-gradient(135deg, var(--panel), var(--glow));
-  border-radius: 18px;
-  font-size: 32px;
-  font-weight: 800;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  box-shadow: 0 0 40px var(--glow);
-  transition: transform .2s;
-}
-
-.play-btn:hover {
-  transform: scale(1.05);
+  flex-wrap: wrap;
+  z-index: 1;
 }
 
 /* MENU BUTTONS */
 .menu-btn {
-  width: 200px;
-  height: 120px;
+  width: 220px;
+  height: 140px;
   background: var(--card);
   border-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 600;
   cursor: pointer;
   transition: transform .2s, box-shadow .2s;
@@ -102,10 +79,32 @@ header {
   box-shadow: 0 0 25px var(--glow);
 }
 
+/* PLAY BUTTON */
+#playBtn {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  background: var(--panel);
+  border: none;
+  color: #fff;
+  padding: 10px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-weight: 600;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+#playBtn:hover {
+  box-shadow: 0 0 18px var(--glow);
+}
+
 /* VIEWER */
 #viewer {
   display: none;
-  height: calc(100vh - 60px);
+  height: calc(100vh - 56px);
   flex-direction: column;
 }
 
@@ -157,11 +156,6 @@ footer {
 <!-- MAIN MENU -->
 <div id="menu">
   <div class="menu-content">
-
-    <div class="play-btn" onclick="openView('Play', 'https://example.com')">
-      ▶ PLAY
-    </div>
-
     <div class="menu-btn" onclick="openView('Movies', 'https://example.com')">
       🎬 Movies
     </div>
@@ -177,8 +171,12 @@ footer {
     <div class="menu-btn" onclick="openView('Search', 'https://example.com')">
       🔍 Search
     </div>
-
   </div>
+
+  <!-- PLAY BUTTON -->
+  <button id="playBtn" onclick="openView('Now Playing', 'https://example.com')">
+    ▶ Play
+  </button>
 </div>
 
 <!-- IFRAME VIEW -->
