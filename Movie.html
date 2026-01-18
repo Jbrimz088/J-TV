@@ -44,10 +44,10 @@ body{
   cursor:pointer;
   font-weight:600;
   white-space:nowrap;
+  touch-action:manipulation;
 }
 
-#controls button.active,
-#controls button:hover{
+#controls button.active{
   background:var(--panel);
 }
 
@@ -59,6 +59,17 @@ body{
   color:#fff;
   padding:8px 12px;
   border-radius:999px;
+}
+
+/* SEARCH MESSAGE */
+#searchHint{
+  background:#000;
+  margin:10px;
+  padding:14px 16px;
+  border-radius:14px;
+  box-shadow:0 0 20px var(--glow);
+  font-size:14px;
+  font-weight:600;
 }
 
 /* GRID */
@@ -75,11 +86,11 @@ body{
   overflow:hidden;
   cursor:pointer;
   transition:.2s;
+  touch-action:manipulation;
 }
 
-.card:hover{
-  transform:scale(1.06);
-  box-shadow:0 0 18px var(--glow);
+.card:active{
+  transform:scale(.98);
 }
 
 .card img{
@@ -109,7 +120,7 @@ body{
   background:#000;
 }
 
-/* BACK / HOME */
+/* BACK */
 #backPlayer{
   position:fixed;
   top:14px;
@@ -123,17 +134,6 @@ body{
   cursor:pointer;
   z-index:20;
   display:none;
-}
-
-/* SEARCH MESSAGE */
-#searchHint{
-  background:#000;
-  margin:10px;
-  padding:14px 16px;
-  border-radius:14px;
-  box-shadow:0 0 20px var(--glow);
-  font-size:14px;
-  font-weight:600;
 }
 
 /* OXYGEN HINT */
@@ -161,12 +161,12 @@ body{
 <body>
 
 <div id="controls">
-  <button onclick="location.href='index.html'">Home</button>
+  <button id="homeBtn">Home</button>
   <button data-feed="trending" class="active">Trending</button>
   <button data-feed="popular">Popular</button>
   <button data-feed="top_rated">Top Rated</button>
   <button data-feed="now_playing">Now Playing</button>
-  <input id="search" placeholder="Search movies…" onkeydown="if(event.key==='Enter')doSearch()">
+  <input id="search" placeholder="Search movies…" />
 </div>
 
 <div id="searchHint">
@@ -185,15 +185,14 @@ body{
   <div id="oxygenHint">
     <div class="bubble">
       Click <b>Select Source</b> (2nd icon)<br>
-      then choose <b>Oxygen or Lithium</b> for best quality
+      then choose <b>Oxygen</b> for best quality
     </div>
   </div>
 </div>
 
-<button id="backPlayer" onclick="exitPlayer()">← Back</button>
+<button id="backPlayer">← Back</button>
 
 <script>
-// ================= CONFIG =================
 const TMDB_KEY="670f376983f73b67d757e9a951a3a5a9";
 const IMG="https://image.tmdb.org/t/p/w500";
 
@@ -203,10 +202,9 @@ const embedParams=new URLSearchParams({
   episodeSelector:"true"
 });
 
-// ================= ELEMENTS =================
 const grid=document.getElementById("grid");
 const controls=document.getElementById("controls");
-const buttons=document.querySelectorAll("#controls button[data-feed]");
+const buttons=[...document.querySelectorAll("#controls button[data-feed]")];
 const player=document.getElementById("player");
 const frame=document.getElementById("frame");
 const search=document.getElementById("search");
@@ -214,21 +212,31 @@ const backPlayer=document.getElementById("backPlayer");
 const oxygenHint=document.getElementById("oxygenHint");
 const searchHint=document.getElementById("searchHint");
 
-// ================= HELPERS =================
-function clearGrid(){grid.innerHTML=""}
+document.getElementById("homeBtn").onclick=()=>location.href="index.html";
+backPlayer.onclick=exitPlayer;
+
+buttons.forEach(btn=>{
+  btn.addEventListener("click",()=>loadFeed(btn.dataset.feed));
+});
+
+search.addEventListener("keydown",e=>{
+  if(e.key==="Enter") doSearch();
+});
+
+function clearGrid(){ grid.innerHTML=""; }
+
 function setActive(feed){
-  buttons.forEach(b=>b.classList.toggle("active",b.dataset.feed===feed))
+  buttons.forEach(b=>b.classList.toggle("active",b.dataset.feed===feed));
 }
 
-// ================= FEEDS =================
 async function loadFeed(feed){
   setActive(feed);
   clearGrid();
   search.value="";
 
-  const url=feed==="trending"
-    ?`https://api.themoviedb.org/3/trending/movie/week?api_key=${TMDB_KEY}`
-    :`https://api.themoviedb.org/3/movie/${feed}?api_key=${TMDB_KEY}`;
+  const url = feed==="trending"
+    ? `https://api.themoviedb.org/3/trending/movie/week?api_key=${TMDB_KEY}`
+    : `https://api.themoviedb.org/3/movie/${feed}?api_key=${TMDB_KEY}`;
 
   const res=await fetch(url);
   const data=await res.json();
@@ -236,20 +244,20 @@ async function loadFeed(feed){
 }
 
 function addCard(item){
-  if(!item.poster_path)return;
+  if(!item.poster_path) return;
   const c=document.createElement("div");
   c.className="card";
   c.innerHTML=`<img src="${IMG}${item.poster_path}"><div class="title">${item.title}</div>`;
-  c.onclick=()=>play(item.id);
+  c.addEventListener("click",()=>play(item.id));
   grid.appendChild(c);
 }
 
-// ================= SEARCH =================
 async function doSearch(){
   const q=search.value.trim();
-  if(!q)return;
+  if(!q) return;
   buttons.forEach(b=>b.classList.remove("active"));
   clearGrid();
+
   const res=await fetch(
     `https://api.themoviedb.org/3/search/movie?api_key=${TMDB_KEY}&query=${encodeURIComponent(q)}`
   );
@@ -257,7 +265,6 @@ async function doSearch(){
   data.results.forEach(addCard);
 }
 
-// ================= PLAYER =================
 function play(id){
   grid.style.display="none";
   controls.style.display="none";
@@ -277,12 +284,10 @@ function exitPlayer(){
   backPlayer.style.display="none";
   grid.style.display="grid";
   controls.style.display="flex";
+  searchHint.style.display="block";
 }
 
-// ================= INIT =================
 loadFeed("trending");
-
-// auto-hide search message after 5s
 setTimeout(()=>searchHint.style.display="none",5000);
 </script>
 
