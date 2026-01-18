@@ -134,12 +134,11 @@ body{
 /* ===== OXYGEN HINT OVERLAY ===== */
 #oxygenHint{
   position:absolute;
-  bottom:110px;
-  left:50%;
-  transform:translateX(-50%);
+  bottom:120px;
+  right:40px;
   z-index:15;
   display:none;
-  text-align:center;
+  text-align:right;
   pointer-events:none;
 }
 
@@ -150,17 +149,17 @@ body{
   box-shadow:0 0 20px var(--glow);
   font-size:14px;
   font-weight:600;
+  margin-bottom:6px;
 }
 
 #oxygenHint .arrow{
-  margin-top:8px;
   font-size:26px;
-  animation:bounce 1s infinite;
+  animation:nudge 1s infinite;
 }
 
-@keyframes bounce{
-  0%,100%{transform:translateY(0)}
-  50%{transform:translateY(8px)}
+@keyframes nudge{
+  0%,100%{transform:translate(0,0)}
+  50%{transform:translate(8px,8px)}
 }
 </style>
 </head>
@@ -189,8 +188,8 @@ body{
 
   <!-- OXYGEN HINT -->
   <div id="oxygenHint">
-    <div class="bubble">Tap “Select Source” → choose <b>Oxygen</b></div>
-    <div class="arrow">⬇️</div>
+    <div class="bubble">Select Source → choose <b>Oxygen</b></div>
+    <div class="arrow">↘️</div>
   </div>
 </div>
 
@@ -267,9 +266,9 @@ function play(id){
 
   frame.src=`https://www.vidking.net/embed/movie/${id}?${embedParams.toString()}`;
 
-  // Show Oxygen hint for 2 seconds
+  // Show Oxygen hint for 6 seconds
   oxygenHint.style.display="block";
-  setTimeout(()=>oxygenHint.style.display="none",2000);
+  setTimeout(()=>oxygenHint.style.display="none",6000);
 }
 
 function exitPlayer(){
