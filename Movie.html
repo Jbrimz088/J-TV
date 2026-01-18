@@ -22,29 +22,19 @@ body{
   font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
 }
 
-/* TOP CONTROLS */
+/* ================= TOP CONTROLS ================= */
 #controls{
   position:sticky;
   top:0;
   z-index:5;
   background:#000;
-  padding:12px;
+  padding:12px 20px;
   display:flex;
   gap:10px;
   align-items:center;
 }
 
-/* SEARCH HINT (inside controls, not overlaying buttons) */
-#searchHint{
-  background:#000;
-  padding:10px 14px;
-  border-radius:999px;
-  box-shadow:0 0 16px var(--glow);
-  font-size:13px;
-  font-weight:600;
-  white-space:nowrap;
-}
-
+/* FEED BUTTONS */
 #controls button{
   background:var(--card);
   border:none;
@@ -60,6 +50,7 @@ body{
   background:var(--panel);
 }
 
+/* SEARCH INPUT */
 #search{
   margin-left:auto;
   background:#111;
@@ -67,10 +58,25 @@ body{
   color:#fff;
   padding:8px 14px;
   border-radius:999px;
-  width:200px;
+  width:220px;
 }
 
-/* GRID */
+/* ================= SEARCH MESSAGE ================= */
+#searchMessage{
+  position:fixed;
+  top:72px;
+  right:20px;
+  z-index:6;
+  background:#000;
+  padding:14px 18px;
+  border-radius:14px;
+  box-shadow:0 0 20px var(--glow);
+  font-size:14px;
+  font-weight:600;
+  max-width:300px;
+}
+
+/* ================= GRID ================= */
 #grid{
   padding:20px;
   display:grid;
@@ -104,7 +110,7 @@ body{
   text-align:center;
 }
 
-/* PLAYER */
+/* ================= PLAYER ================= */
 #player{
   display:none;
   height:100vh;
@@ -118,10 +124,11 @@ body{
   background:#000;
 }
 
-/* BACK BUTTONS */
-#backPlayer,#backHome{
+/* ================= BACK BUTTONS ================= */
+#backPlayer,
+#backHome{
   position:fixed;
-  top:14px;
+  top:16px;
   padding:10px 14px;
   border-radius:999px;
   font-weight:600;
@@ -132,17 +139,17 @@ body{
 }
 
 #backPlayer{
-  left:14px;
+  left:16px;
   background:var(--panel);
   display:none;
 }
 
 #backHome{
-  right:14px;
+  right:16px;
   background:#333;
 }
 
-/* OXYGEN HINT */
+/* ================= PLAYER OXYGEN MESSAGE ================= */
 #oxygenHint{
   position:absolute;
   bottom:140px;
@@ -174,12 +181,13 @@ body{
   <button data-feed="popular">Popular</button>
   <button data-feed="top_rated">Top Rated</button>
   <button data-feed="now_playing">Now Playing</button>
-
-  <div id="searchHint">
-    Not every movie appears here — use Search
-  </div>
-
   <input id="search" placeholder="Search movies…" onkeydown="if(event.key==='Enter')doSearch()">
+</div>
+
+<!-- SEARCH MESSAGE (AUTO-HIDES) -->
+<div id="searchMessage">
+  Not every movie appears here.<br>
+  Use <b>Search</b> to find any movie.
 </div>
 
 <div id="grid"></div>
@@ -219,7 +227,7 @@ const frame=document.getElementById("frame");
 const search=document.getElementById("search");
 const backPlayer=document.getElementById("backPlayer");
 const oxygenHint=document.getElementById("oxygenHint");
-const searchHint=document.getElementById("searchHint");
+const searchMessage=document.getElementById("searchMessage");
 
 // ================= HELPERS =================
 function clearGrid(){grid.innerHTML=""}
@@ -268,7 +276,7 @@ async function doSearch(){
 function play(id){
   grid.style.display="none";
   controls.style.display="none";
-  searchHint.style.display="none";
+  searchMessage.style.display="none";
   player.style.display="block";
   backPlayer.style.display="block";
 
@@ -289,11 +297,11 @@ function exitPlayer(){
 // ================= EVENTS =================
 buttons.forEach(b=>b.onclick=()=>loadFeed(b.dataset.feed));
 
-// SEARCH HINT AUTO-HIDE (5 seconds)
-setTimeout(()=>searchHint.style.display="none",5000);
-
-// DEFAULT LOAD
+// ================= INIT =================
 loadFeed("trending");
+
+// Hide search message after 5 seconds
+setTimeout(()=>searchMessage.style.display="none",5000);
 </script>
 
 </body>
