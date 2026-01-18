@@ -2,98 +2,140 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Movies & TV • J-TV</title>
+<title>Browse • J-TV</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
 :root {
-  --bg: #0b0b0f;
-  --card: #1b1b24;
-  --panel: #5b2bd6;
-  --glow: #7c4dff;
+  --bg:#0b0b0f;
+  --card:#1b1b24;
+  --panel:#5b2bd6;
+  --glow:#7c4dff;
 }
 
-* { box-sizing: border-box; }
+*{box-sizing:border-box}
 
-body {
-  margin: 0;
-  background: var(--bg);
-  color: #fff;
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
+body{
+  margin:0;
+  background:var(--bg);
+  color:#fff;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
+}
+
+/* TOP BAR */
+#controls{
+  position:sticky;
+  top:0;
+  z-index:5;
+  background:#000;
+  padding:12px;
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  align-items:center;
+}
+
+#controls button{
+  background:var(--card);
+  border:none;
+  color:#fff;
+  padding:8px 14px;
+  border-radius:999px;
+  cursor:pointer;
+  font-weight:600;
+}
+
+#controls button.active,
+#controls button:hover{
+  background:var(--panel);
+}
+
+#search{
+  margin-left:auto;
+  background:#111;
+  border:none;
+  color:#fff;
+  padding:8px 14px;
+  border-radius:999px;
+  width:200px;
 }
 
 /* GRID */
-#grid {
-  padding: 24px;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 16px;
+#grid{
+  padding:20px;
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
+  gap:16px;
 }
 
-.card {
-  background: var(--card);
-  border-radius: 12px;
-  overflow: hidden;
-  cursor: pointer;
-  transition: transform .2s, box-shadow .2s;
+.card{
+  background:var(--card);
+  border-radius:12px;
+  overflow:hidden;
+  cursor:pointer;
+  transition:.2s;
 }
 
-.card:hover {
-  transform: scale(1.06);
-  box-shadow: 0 0 18px var(--glow);
+.card:hover{
+  transform:scale(1.06);
+  box-shadow:0 0 18px var(--glow);
 }
 
-.card img {
-  width: 100%;
-  height: 240px;
-  object-fit: cover;
+.card img{
+  width:100%;
+  height:240px;
+  object-fit:cover;
 }
 
-.card .title {
-  padding: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  text-align: center;
+.card .title{
+  padding:8px;
+  font-size:14px;
+  font-weight:600;
+  text-align:center;
 }
 
 /* PLAYER */
-#player {
-  display: none;
-  height: 100vh;
+#player{
+  display:none;
+  height:100vh;
 }
 
-#player iframe {
-  width: 100%;
-  height: 100%;
-  border: none;
-  background: #000;
+#player iframe{
+  width:100%;
+  height:100%;
+  border:none;
+  background:#000;
 }
 
-/* BACK BUTTON */
-#backBtn {
-  position: fixed;
-  top: 16px;
-  left: 16px;
-  background: var(--panel);
-  border: none;
-  color: #fff;
-  padding: 10px 14px;
-  border-radius: 999px;
-  cursor: pointer;
-  font-weight: 600;
-  z-index: 10;
-  display: none;
-}
-
-#backBtn:hover {
-  box-shadow: 0 0 15px var(--glow);
+/* BACK */
+#back{
+  position:fixed;
+  top:14px;
+  left:14px;
+  background:var(--panel);
+  border:none;
+  color:#fff;
+  padding:10px 14px;
+  border-radius:999px;
+  font-weight:600;
+  cursor:pointer;
+  display:none;
+  z-index:10;
 }
 </style>
 </head>
 
 <body>
 
-<button id="backBtn" onclick="goBack()">← Back</button>
+<button id="back" onclick="goBack()">← Back</button>
+
+<div id="controls">
+  <button onclick="loadFeed('trending')" class="active">Trending</button>
+  <button onclick="loadFeed('popular')">Popular</button>
+  <button onclick="loadFeed('top_rated')">Top Rated</button>
+  <button onclick="loadFeed('now_playing')">Now Playing</button>
+  <input id="search" placeholder="Search…" onkeydown="if(event.key==='Enter')doSearch()">
+</div>
 
 <div id="grid"></div>
 
@@ -102,80 +144,113 @@ body {
 </div>
 
 <script>
-// ===============================
-// TMDB CONFIG
-// ===============================
+// ==========================
+// CONFIG
+// ==========================
 const TMDB_KEY = "670f376983f73b67d757e9a951a3a5a9";
-const IMG_BASE = "https://image.tmdb.org/t/p/w500";
+const IMG = "https://image.tmdb.org/t/p/w500";
+const params = new URLSearchParams({
+  autoPlay:"true",
+  nextEpisode:"true",
+  episodeSelector:"true",
+  source:"oxygen"
+});
 
-// ===============================
-// FETCH TRENDING (MOVIES + TV)
-// ===============================
-async function loadContent() {
-  const endpoints = [
-    `https://api.themoviedb.org/3/trending/movie/week?api_key=${TMDB_KEY}`,
-    `https://api.themoviedb.org/3/trending/tv/week?api_key=${TMDB_KEY}`
+// ==========================
+// HELPERS
+// ==========================
+function clearGrid(){
+  grid.innerHTML="";
+}
+
+function addCard(item,type){
+  if(!item.poster_path) return;
+  const card=document.createElement("div");
+  card.className="card";
+  card.innerHTML=`
+    <img src="${IMG}${item.poster_path}">
+    <div class="title">${item.title||item.name}</div>
+  `;
+  card.onclick=()=>play(type,item.id);
+  grid.appendChild(card);
+}
+
+// ==========================
+// FEEDS
+// ==========================
+async function loadFeed(feed){
+  document.querySelectorAll("#controls button").forEach(b=>b.classList.remove("active"));
+  event.target.classList.add("active");
+
+  clearGrid();
+
+  const movieURL =
+    feed==="trending"
+      ? `/trending/movie/week`
+      : `/movie/${feed}`;
+
+  const tvURL =
+    feed==="trending"
+      ? `/trending/tv/week`
+      : `/tv/${feed}`;
+
+  const urls=[
+    `https://api.themoviedb.org/3${movieURL}?api_key=${TMDB_KEY}`,
+    `https://api.themoviedb.org/3${tvURL}?api_key=${TMDB_KEY}`
   ];
 
-  for (const url of endpoints) {
-    const res = await fetch(url);
-    const data = await res.json();
-    data.results.forEach(item => addCard(item));
+  for(const url of urls){
+    const res=await fetch(url);
+    const data=await res.json();
+    data.results.forEach(i=>addCard(i,i.media_type||url.includes("/tv/")?"tv":"movie"));
   }
 }
 
-function addCard(item) {
-  if (!item.poster_path) return;
+// ==========================
+// SEARCH
+// ==========================
+async function doSearch(){
+  const q=search.value.trim();
+  if(!q) return;
+  clearGrid();
 
-  const card = document.createElement("div");
-  card.className = "card";
-
-  const title = item.title || item.name;
-  const type = item.media_type; // movie | tv
-
-  card.innerHTML = `
-    <img src="${IMG_BASE}${item.poster_path}">
-    <div class="title">${title}</div>
-  `;
-
-  card.onclick = () => playItem(type, item.id);
-  document.getElementById("grid").appendChild(card);
+  const url=`https://api.themoviedb.org/3/search/multi?api_key=${TMDB_KEY}&query=${encodeURIComponent(q)}`;
+  const res=await fetch(url);
+  const data=await res.json();
+  data.results
+    .filter(i=>i.media_type==="movie"||i.media_type==="tv")
+    .forEach(i=>addCard(i,i.media_type));
 }
 
-// ===============================
-// PLAYER (VIDKING + OXYGEN)
-// ===============================
-function playItem(type, tmdbId) {
-  document.getElementById("grid").style.display = "none";
-  document.getElementById("player").style.display = "block";
-  document.getElementById("backBtn").style.display = "block";
+// ==========================
+// PLAYER
+// ==========================
+function play(type,id){
+  grid.style.display="none";
+  controls.style.display="none";
+  player.style.display="block";
+  back.style.display="block";
 
-  const params = new URLSearchParams({
-    autoPlay: "true",
-    nextEpisode: "true",
-    episodeSelector: "true",
-    source: "oxygen"
-  });
-
-  const path =
-    type === "tv"
-      ? "tv"
-      : "movie";
-
-  document.getElementById("frame").src =
-    `https://www.vidking.net/embed/${path}/${tmdbId}?${params.toString()}`;
+  frame.src=`https://www.vidking.net/embed/${type}/${id}?${params.toString()}`;
 }
 
-function goBack() {
-  document.getElementById("frame").src = "";
-  document.getElementById("player").style.display = "none";
-  document.getElementById("backBtn").style.display = "none";
-  document.getElementById("grid").style.display = "grid";
+function goBack(){
+  frame.src="";
+  player.style.display="none";
+  back.style.display="none";
+  grid.style.display="grid";
+  controls.style.display="flex";
 }
 
-// ===============================
-loadContent();
-// ===============================
+// ==========================
+const grid=document.getElementById("grid");
+const controls=document.getElementById("controls");
+const player=document.getElementById("player");
+const frame=document.getElementById("frame");
+const search=document.getElementById("search");
+
+// INITIAL LOAD
+loadFeed("trending");
 </script>
 
 </body>
