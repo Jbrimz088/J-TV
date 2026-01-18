@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>TV Shows • J-TV</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+:root{
+  --bg:#0b0b0f;
+  --card:#1b1b24;
+  --panel:#5b2bd6;
+  --glow:#7c4dff;
+}
+
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  background:var(--bg);
+  color:#fff;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
+}
+
+/* CONTROLS */
+#controls{
+  position:sticky;
+  top:0;
+  z-index:5;
+  background:#000;
+  padding:10px;
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  align-items:center;
+}
+
+#controls button{
+  background:var(--card);
+  border:none;
+  color:#fff;
+  padding:8px 12px;
+  border-radius:999px;
+  cursor:pointer;
+  font-weight:600;
+  white-space:nowrap;
+}
+
+#controls button.active,
+#controls button:hover{
+  background:var(--panel);
+}
+
+#search{
+  flex:1 1 160px;
+  min-width:140px;
+  background:#111;
+  border:none;
+  color:#fff;
+  padding:8px 12px;
+  border-radius:999px;
+}
+
+/* GRID */
+#grid{
+  padding:20px;
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
+  gap:16px;
+}
+
+.card{
+  background:var(--card);
+  border-radius:12px;
+  overflow:hidden;
+  cursor:pointer;
+  transition:.2s;
+}
+
+.card:hover{
+  transform:scale(1.06);
+  box-shadow:0 0 18px var(--glow);
+}
+
+.card img{
+  width:100%;
+  height:240px;
+  object-fit:cover;
+}
+
+.card .title{
+  padding:8px;
+  font-size:14px;
+  font-weight:600;
+  text-align:center;
+}
+
+/* PLAYER */
+#player{
+  display:none;
+  height:100vh;
+  position:relative;
+}
+
+#player iframe{
+  width:100%;
+  height:100%;
+  border:none;
+  background:#000;
+}
+
+/* BACK */
+#backPlayer{
+  position:fixed;
+  top:14px;
+  left:14px;
+  background:var(--panel);
+  border:none;
+  color:#fff;
+  padding:10px 14px;
+  border-radius:999px;
+  font-weight:600;
+  cursor:pointer;
+  z-index:20;
+  display:none;
+}
+
+/* OXYGEN HINT */
+#oxygenHint{
+  position:absolute;
+  bottom:140px;
+  right:160px;
+  z-index:15;
+  display:none;
+  pointer-events:none;
+}
+
+#oxygenHint .bubble{
+  background:#000;
+  padding:18px 22px;
+  border-radius:16px;
+  box-shadow:0 0 30px var(--glow);
+  font-size:16px;
+  font-weight:700;
+  max-width:360px;
+}
+</style>
+</head>
+
+<body>
+
+<div id="controls">
+  <button onclick="location.href='index.html'">Home</button>
+  <button data-feed="trending" class="active">Trending</button>
+  <button data-feed="popular">Popular</button>
+  <button data-feed="top_rated">Top Rated</button>
+  <button data-feed="airing_today">Airing Today</button>
+  <input id="search" placeholder="Search TV shows…" onkeydown="if(event.key==='Enter')doSearch()">
+</div>
+
+<div id="grid"></div>
+
+<div id="player">
+  <iframe
+    id="frame"
+    sandbox="allow-scripts allow-same-origin allow-forms"
+    allow="autoplay; fullscreen">
+  </iframe>
+
+  <div id="oxygenHint">
+    <div class="bubble">
+      Click <b>Select Source</b> (2nd icon)<br>
+      then choose <b>Oxygen</b> for best quality
+    </div>
+  </div>
+</div>
+
+<button id="backPlayer" onclick="exitPlayer()">← Back</button>
+
+<script>
+// ================= CONFIG =================
+const TMDB_KEY = "670f376983f73b67d757e9a951a3a5a9";
+const IMG = "https://image.tmdb.org/t/p/w500";
+
+const embedParams = new URLSearchParams({
+  autoPlay:"true",
+  nextEpisode:"true",
+  episodeSelector:"true"
+});
+
+// ================= ELEMENTS =================
+const grid = document.getElementById("grid");
+const controls = document.getElementById("controls");
+const buttons = document.querySelectorAll("#controls button[data-feed]");
+const player = document.getElementById("player");
+const frame = document.getElementById("frame");
+const search = document.getElementById("search");
+const backPlayer = document.getElementById("backPlayer");
+const oxygenHint = document.getElementById("oxygenHint");
+
+// ================= HELPERS =================
+function clearGrid(){ grid.innerHTML=""; }
+function setActive(feed){
+  buttons.forEach(b=>b.classList.toggle("active", b.dataset.feed===feed));
+}
+
+// ================= FEEDS =================
+async function loadFeed(feed){
+  setActive(feed);
+  clearGrid();
+  search.value="";
+
+  const url =
+    feed === "trending"
+      ? `https://api.themoviedb.org/3/trending/tv/week?api_key=${TMDB_KEY}`
+      : `https://api.themoviedb.org/3/tv/${feed}?api_key=${TMDB_KEY}`;
+
+  const res = await fetch(url);
+  const data = await res.json();
+  data.results.forEach(addCard);
+}
+
+function addCard(item){
+  if(!item.poster_path) return;
+  const c=document.createElement("div");
+  c.className="card";
+  c.innerHTML=`
+    <img src="${IMG}${item.poster_path}">
+    <div class="title">${item.name}</div>
+  `;
+  c.onclick=()=>play(item.id);
+  grid.appendChild(c);
+}
+
+// ================= SEARCH =================
+async function doSearch(){
+  const q=search.value.trim();
+  if(!q) return;
+  buttons.forEach(b=>b.classList.remove("active"));
+  clearGrid();
+
+  const res=await fetch(
+    `https://api.themoviedb.org/3/search/tv?api_key=${TMDB_KEY}&query=${encodeURIComponent(q)}`
+  );
+  const data=await res.json();
+  data.results.forEach(addCard);
+}
+
+// ================= PLAYER =================
+function play(id){
+  grid.style.display="none";
+  controls.style.display="none";
+  player.style.display="block";
+  backPlayer.style.display="block";
+
+  // default: Season 1, Episode 1
+  frame.src =
+    `https://www.vidking.net/embed/tv/${id}/1/1?${embedParams.toString()}`;
+
+  oxygenHint.style.display="block";
+  setTimeout(()=>oxygenHint.style.display="none",7000);
+}
+
+function exitPlayer(){
+  frame.src="";
+  player.style.display="none";
+  backPlayer.style.display="none";
+  grid.style.display="grid";
+  controls.style.display="flex";
+}
+
+// ================= INIT =================
+buttons.forEach(b=>b.onclick=()=>loadFeed(b.dataset.feed));
+loadFeed("trending");
+</script>
+
+</body>
+</html>
