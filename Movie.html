@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Browse • J-TV</title>
+<title>Movies • J-TV</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
@@ -22,7 +22,7 @@ body{
   font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
 }
 
-/* TOP BAR */
+/* TOP CONTROLS */
 #controls{
   position:sticky;
   top:0;
@@ -107,40 +107,53 @@ body{
   background:#000;
 }
 
-/* BACK */
-#back{
+/* BACK BUTTONS */
+#backPlayer, #backHome{
   position:fixed;
   top:14px;
-  left:14px;
-  background:var(--panel);
-  border:none;
-  color:#fff;
   padding:10px 14px;
   border-radius:999px;
   font-weight:600;
   cursor:pointer;
-  display:none;
   z-index:10;
+  border:none;
+  color:#fff;
+}
+
+#backPlayer{
+  left:14px;
+  background:var(--panel);
+  display:none;
+}
+
+#backHome{
+  right:14px;
+  background:#333;
 }
 </style>
 </head>
 
 <body>
 
-<button id="back" onclick="goBack()">← Back</button>
+<button id="backPlayer" onclick="exitPlayer()">← Back</button>
+<button id="backHome" onclick="location.href='index.html'">Home</button>
 
 <div id="controls">
   <button onclick="loadFeed('trending')" class="active">Trending</button>
   <button onclick="loadFeed('popular')">Popular</button>
   <button onclick="loadFeed('top_rated')">Top Rated</button>
   <button onclick="loadFeed('now_playing')">Now Playing</button>
-  <input id="search" placeholder="Search…" onkeydown="if(event.key==='Enter')doSearch()">
+  <input id="search" placeholder="Search movies…" onkeydown="if(event.key==='Enter')doSearch()">
 </div>
 
 <div id="grid"></div>
 
 <div id="player">
-  <iframe id="frame" allowfullscreen></iframe>
+  <iframe
+    id="frame"
+    sandbox="allow-scripts allow-same-origin allow-forms"
+    allow="autoplay; fullscreen">
+  </iframe>
 </div>
 
 <script>
@@ -149,95 +162,78 @@ body{
 // ==========================
 const TMDB_KEY = "670f376983f73b67d757e9a951a3a5a9";
 const IMG = "https://image.tmdb.org/t/p/w500";
-const params = new URLSearchParams({
+
+const embedParams = new URLSearchParams({
   autoPlay:"true",
-  nextEpisode:"true",
-  episodeSelector:"true",
   source:"oxygen"
 });
 
 // ==========================
 // HELPERS
 // ==========================
-function clearGrid(){
-  grid.innerHTML="";
-}
+function clearGrid(){ grid.innerHTML=""; }
 
-function addCard(item,type){
+function addCard(item){
   if(!item.poster_path) return;
+
   const card=document.createElement("div");
   card.className="card";
   card.innerHTML=`
     <img src="${IMG}${item.poster_path}">
-    <div class="title">${item.title||item.name}</div>
+    <div class="title">${item.title}</div>
   `;
-  card.onclick=()=>play(type,item.id);
+  card.onclick=()=>play(item.id);
   grid.appendChild(card);
 }
 
 // ==========================
-// FEEDS
+// FEEDS (MOVIES ONLY)
 // ==========================
 async function loadFeed(feed){
   document.querySelectorAll("#controls button").forEach(b=>b.classList.remove("active"));
   event.target.classList.add("active");
-
   clearGrid();
 
-  const movieURL =
+  const url =
     feed==="trending"
-      ? `/trending/movie/week`
-      : `/movie/${feed}`;
+      ? `https://api.themoviedb.org/3/trending/movie/week?api_key=${TMDB_KEY}`
+      : `https://api.themoviedb.org/3/movie/${feed}?api_key=${TMDB_KEY}`;
 
-  const tvURL =
-    feed==="trending"
-      ? `/trending/tv/week`
-      : `/tv/${feed}`;
-
-  const urls=[
-    `https://api.themoviedb.org/3${movieURL}?api_key=${TMDB_KEY}`,
-    `https://api.themoviedb.org/3${tvURL}?api_key=${TMDB_KEY}`
-  ];
-
-  for(const url of urls){
-    const res=await fetch(url);
-    const data=await res.json();
-    data.results.forEach(i=>addCard(i,i.media_type||url.includes("/tv/")?"tv":"movie"));
-  }
+  const res=await fetch(url);
+  const data=await res.json();
+  data.results.forEach(addCard);
 }
 
 // ==========================
-// SEARCH
+// SEARCH (MOVIES ONLY)
 // ==========================
 async function doSearch(){
   const q=search.value.trim();
   if(!q) return;
   clearGrid();
 
-  const url=`https://api.themoviedb.org/3/search/multi?api_key=${TMDB_KEY}&query=${encodeURIComponent(q)}`;
+  const url=`https://api.themoviedb.org/3/search/movie?api_key=${TMDB_KEY}&query=${encodeURIComponent(q)}`;
   const res=await fetch(url);
   const data=await res.json();
-  data.results
-    .filter(i=>i.media_type==="movie"||i.media_type==="tv")
-    .forEach(i=>addCard(i,i.media_type));
+  data.results.forEach(addCard);
 }
 
 // ==========================
-// PLAYER
+// PLAYER (LOCKED)
 // ==========================
-function play(type,id){
+function play(id){
   grid.style.display="none";
   controls.style.display="none";
   player.style.display="block";
-  back.style.display="block";
+  backPlayer.style.display="block";
 
-  frame.src=`https://www.vidking.net/embed/${type}/${id}?${params.toString()}`;
+  frame.src=`https://www.vidking.net/embed/movie/${id}?${embedParams.toString()}`;
 }
 
-function goBack(){
+function exitPlayer(){
   frame.src="";
   player.style.display="none";
-  back.style.display="none";
+  backPlayer.style.display="none";
   grid.style.display="grid";
   controls.style.display="flex";
 }
@@ -248,6 +244,7 @@ const controls=document.getElementById("controls");
 const player=document.getElementById("player");
 const frame=document.getElementById("frame");
 const search=document.getElementById("search");
+const backPlayer=document.getElementById("backPlayer");
 
 // INITIAL LOAD
 loadFeed("trending");
