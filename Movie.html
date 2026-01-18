@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Movies • J-TV</title>
+<title>Movies & TV • J-TV</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
@@ -22,7 +22,7 @@ body {
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
 }
 
-/* MOVIE GRID */
+/* GRID */
 #grid {
   padding: 24px;
   display: grid;
@@ -102,49 +102,51 @@ body {
 </div>
 
 <script>
-// =================================================
-// EASY MODE: ADD MOVIES HERE
-// VidKing uses TMDB IDs
-// =================================================
-const MOVIES = [
-  {
-    title: "Zootopia",
-    tmdb: 1084242,
-    poster: "https://image.tmdb.org/t/p/w500/hlK0e0wAQ3VLuJcsfIYPvb4JVud.jpg"
-  },
-  {
-    title: "Shrek",
-    tmdb: 808,
-    poster: "https://image.tmdb.org/t/p/w500/iB64vpL3dIObOtMZgX3RqdVdQDc.jpg"
-  },
-  {
-    title: "The Avengers",
-    tmdb: 24428,
-    poster: "https://image.tmdb.org/t/p/w500/RYMX2wcKCBAr24UyPD7xwmjaTn.jpg"
+// ===============================
+// TMDB CONFIG
+// ===============================
+const TMDB_KEY = "670f376983f73b67d757e9a951a3a5a9";
+const IMG_BASE = "https://image.tmdb.org/t/p/w500";
+
+// ===============================
+// FETCH TRENDING (MOVIES + TV)
+// ===============================
+async function loadContent() {
+  const endpoints = [
+    `https://api.themoviedb.org/3/trending/movie/week?api_key=${TMDB_KEY}`,
+    `https://api.themoviedb.org/3/trending/tv/week?api_key=${TMDB_KEY}`
+  ];
+
+  for (const url of endpoints) {
+    const res = await fetch(url);
+    const data = await res.json();
+    data.results.forEach(item => addCard(item));
   }
-];
+}
 
-// =================================================
-// BUILD MOVIE GRID
-// =================================================
-const grid = document.getElementById("grid");
+function addCard(item) {
+  if (!item.poster_path) return;
 
-MOVIES.forEach(movie => {
   const card = document.createElement("div");
   card.className = "card";
-  card.innerHTML = `
-    <img src="${movie.poster}" alt="${movie.title}">
-    <div class="title">${movie.title}</div>
-  `;
-  card.onclick = () => playMovie(movie.tmdb);
-  grid.appendChild(card);
-});
 
-// =================================================
-// PLAYER LOGIC (VIDKING + OXYGEN)
-// =================================================
-function playMovie(tmdbId) {
-  grid.style.display = "none";
+  const title = item.title || item.name;
+  const type = item.media_type; // movie | tv
+
+  card.innerHTML = `
+    <img src="${IMG_BASE}${item.poster_path}">
+    <div class="title">${title}</div>
+  `;
+
+  card.onclick = () => playItem(type, item.id);
+  document.getElementById("grid").appendChild(card);
+}
+
+// ===============================
+// PLAYER (VIDKING + OXYGEN)
+// ===============================
+function playItem(type, tmdbId) {
+  document.getElementById("grid").style.display = "none";
   document.getElementById("player").style.display = "block";
   document.getElementById("backBtn").style.display = "block";
 
@@ -155,19 +157,25 @@ function playMovie(tmdbId) {
     source: "oxygen"
   });
 
+  const path =
+    type === "tv"
+      ? "tv"
+      : "movie";
+
   document.getElementById("frame").src =
-    "https://www.vidking.net/embed/movie/" +
-    tmdbId +
-    "?" +
-    params.toString();
+    `https://www.vidking.net/embed/${path}/${tmdbId}?${params.toString()}`;
 }
 
 function goBack() {
   document.getElementById("frame").src = "";
   document.getElementById("player").style.display = "none";
   document.getElementById("backBtn").style.display = "none";
-  grid.style.display = "grid";
+  document.getElementById("grid").style.display = "grid";
 }
+
+// ===============================
+loadContent();
+// ===============================
 </script>
 
 </body>
