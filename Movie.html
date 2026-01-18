@@ -107,7 +107,7 @@ body{
   background:#000;
 }
 
-/* BACK */
+/* BACK BUTTONS */
 #backPlayer,#backHome{
   position:fixed;
   top:14px;
@@ -131,35 +131,37 @@ body{
   background:#333;
 }
 
-/* ===== OXYGEN HINT OVERLAY ===== */
+/* ===== OXYGEN HINT (BIG + BOTTOM RIGHT) ===== */
 #oxygenHint{
   position:absolute;
-  bottom:120px;
-  right:40px;
+  bottom:140px;
+  right:120px;
   z-index:15;
   display:none;
-  text-align:right;
   pointer-events:none;
 }
 
 #oxygenHint .bubble{
   background:#000;
-  padding:12px 16px;
-  border-radius:12px;
-  box-shadow:0 0 20px var(--glow);
-  font-size:14px;
-  font-weight:600;
-  margin-bottom:6px;
+  padding:20px 26px;
+  border-radius:16px;
+  box-shadow:0 0 30px var(--glow);
+  font-size:18px;
+  font-weight:700;
+  max-width:320px;
 }
 
 #oxygenHint .arrow{
-  font-size:26px;
-  animation:nudge 1s infinite;
+  margin-top:12px;
+  font-size:42px;
+  text-align:right;
+  animation:bounce 1.2s infinite;
 }
 
-@keyframes nudge{
+/* Arrow bounce */
+@keyframes bounce{
   0%,100%{transform:translate(0,0)}
-  50%{transform:translate(8px,8px)}
+  50%{transform:translate(10px,10px)}
 }
 </style>
 </head>
@@ -188,8 +190,11 @@ body{
 
   <!-- OXYGEN HINT -->
   <div id="oxygenHint">
-    <div class="bubble">Select Source → choose <b>Oxygen</b></div>
-    <div class="arrow">↘️</div>
+    <div class="bubble">
+      Click <b>Select Source</b><br>
+      then choose <b>Oxygen</b> for best quality
+    </div>
+    <div class="arrow">↘</div>
   </div>
 </div>
 
@@ -266,9 +271,9 @@ function play(id){
 
   frame.src=`https://www.vidking.net/embed/movie/${id}?${embedParams.toString()}`;
 
-  // Show Oxygen hint for 6 seconds
+  // Show Oxygen hint for 7 seconds
   oxygenHint.style.display="block";
-  setTimeout(()=>oxygenHint.style.display="none",6000);
+  setTimeout(()=>oxygenHint.style.display="none",7000);
 }
 
 function exitPlayer(){
