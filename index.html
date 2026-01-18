@@ -109,9 +109,8 @@ footer{
     <div class="btn" onclick="location.href='tv.html'">📺 TV Shows</div>
     <div class="btn" onclick="location.href='guide.html'">📅 Guide</div>
 
-    <!-- 🔥 APK DOWNLOAD -->
-    <div class="btn apk"
-         onclick="https://jbrimz088.github.io/J-TV/J-TV.apk">
+    <!-- OPTIONAL APK DOWNLOAD -->
+    <div class="btn apk" onclick="confirmAPK()">
       ⬇ Download APK
     </div>
   </div>
@@ -120,6 +119,19 @@ footer{
 <footer>
   J-TV · Stream hub
 </footer>
+
+<script>
+function confirmAPK(){
+  if(confirm(
+    "Download the J-TV APK?\n\n" +
+    "• For Android TV / Firestick\n" +
+    "• Enable Unknown Apps\n" +
+    "• Optional — website works without it"
+  )){
+    location.href = "https://YOUR_APK_LINK_HERE.apk";
+  }
+}
+</script>
 
 </body>
 </html>
