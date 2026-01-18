@@ -44,10 +44,10 @@ body{
   cursor:pointer;
   font-weight:600;
   white-space:nowrap;
+  touch-action:manipulation;
 }
 
-#controls button.active,
-#controls button:hover{
+#controls button.active{
   background:var(--panel);
 }
 
@@ -86,11 +86,11 @@ body{
   overflow:hidden;
   cursor:pointer;
   transition:.2s;
+  touch-action:manipulation;
 }
 
-.card:hover{
-  transform:scale(1.06);
-  box-shadow:0 0 18px var(--glow);
+.card:active{
+  transform:scale(.98);
 }
 
 .card img{
@@ -161,12 +161,12 @@ body{
 <body>
 
 <div id="controls">
-  <button onclick="location.href='index.html'">Home</button>
+  <button id="homeBtn">Home</button>
   <button data-feed="trending" class="active">Trending</button>
   <button data-feed="popular">Popular</button>
   <button data-feed="top_rated">Top Rated</button>
   <button data-feed="airing_today">Airing Today</button>
-  <input id="search" placeholder="Search TV shows…" onkeydown="if(event.key==='Enter')doSearch()">
+  <input id="search" placeholder="Search TV shows…" />
 </div>
 
 <div id="searchHint">
@@ -185,15 +185,14 @@ body{
   <div id="oxygenHint">
     <div class="bubble">
       Click <b>Select Source</b> (3rd icon)<br>
-      then choose <b>Lithium or Oxygen</b> for best quality Also For Episodes and Seasons
+      then choose <b>Lithium or Oxygen</b> for best quality Also For Episodes and Seasons (1st Icon) to Change
     </div>
   </div>
 </div>
 
-<button id="backPlayer" onclick="exitPlayer()">← Back</button>
+<button id="backPlayer">← Back</button>
 
 <script>
-// ================= CONFIG =================
 const TMDB_KEY="670f376983f73b67d757e9a951a3a5a9";
 const IMG="https://image.tmdb.org/t/p/w500";
 
@@ -203,10 +202,9 @@ const embedParams=new URLSearchParams({
   episodeSelector:"true"
 });
 
-// ================= ELEMENTS =================
 const grid=document.getElementById("grid");
 const controls=document.getElementById("controls");
-const buttons=document.querySelectorAll("#controls button[data-feed]");
+const buttons=[...document.querySelectorAll("#controls button[data-feed]")];
 const player=document.getElementById("player");
 const frame=document.getElementById("frame");
 const search=document.getElementById("search");
@@ -214,22 +212,31 @@ const backPlayer=document.getElementById("backPlayer");
 const oxygenHint=document.getElementById("oxygenHint");
 const searchHint=document.getElementById("searchHint");
 
-// ================= HELPERS =================
-function clearGrid(){grid.innerHTML=""}
+document.getElementById("homeBtn").onclick=()=>location.href="index.html";
+backPlayer.onclick=exitPlayer;
+
+buttons.forEach(btn=>{
+  btn.addEventListener("click",()=>loadFeed(btn.dataset.feed));
+});
+
+search.addEventListener("keydown",e=>{
+  if(e.key==="Enter") doSearch();
+});
+
+function clearGrid(){ grid.innerHTML=""; }
+
 function setActive(feed){
-  buttons.forEach(b=>b.classList.toggle("active", b.dataset.feed===feed));
+  buttons.forEach(b=>b.classList.toggle("active",b.dataset.feed===feed));
 }
 
-// ================= FEEDS =================
 async function loadFeed(feed){
   setActive(feed);
   clearGrid();
   search.value="";
 
-  const url =
-    feed==="trending"
-      ? `https://api.themoviedb.org/3/trending/tv/week?api_key=${TMDB_KEY}`
-      : `https://api.themoviedb.org/3/tv/${feed}?api_key=${TMDB_KEY}`;
+  const url = feed==="trending"
+    ? `https://api.themoviedb.org/3/trending/tv/week?api_key=${TMDB_KEY}`
+    : `https://api.themoviedb.org/3/tv/${feed}?api_key=${TMDB_KEY}`;
 
   const res=await fetch(url);
   const data=await res.json();
@@ -237,21 +244,17 @@ async function loadFeed(feed){
 }
 
 function addCard(item){
-  if(!item.poster_path)return;
+  if(!item.poster_path) return;
   const c=document.createElement("div");
   c.className="card";
-  c.innerHTML=`
-    <img src="${IMG}${item.poster_path}">
-    <div class="title">${item.name}</div>
-  `;
-  c.onclick=()=>play(item.id);
+  c.innerHTML=`<img src="${IMG}${item.poster_path}"><div class="title">${item.name}</div>`;
+  c.addEventListener("click",()=>play(item.id));
   grid.appendChild(c);
 }
 
-// ================= SEARCH =================
 async function doSearch(){
   const q=search.value.trim();
-  if(!q)return;
+  if(!q) return;
   buttons.forEach(b=>b.classList.remove("active"));
   clearGrid();
 
@@ -262,7 +265,6 @@ async function doSearch(){
   data.results.forEach(addCard);
 }
 
-// ================= PLAYER =================
 function play(id){
   grid.style.display="none";
   controls.style.display="none";
@@ -270,8 +272,7 @@ function play(id){
   player.style.display="block";
   backPlayer.style.display="block";
 
-  frame.src =
-    `https://www.vidking.net/embed/tv/${id}/1/1?${embedParams.toString()}`;
+  frame.src=`https://www.vidking.net/embed/tv/${id}/1/1?${embedParams.toString()}`;
 
   oxygenHint.style.display="block";
   setTimeout(()=>oxygenHint.style.display="none",7000);
@@ -286,11 +287,7 @@ function exitPlayer(){
   searchHint.style.display="block";
 }
 
-// ================= INIT =================
-buttons.forEach(b=>b.onclick=()=>loadFeed(b.dataset.feed));
 loadFeed("trending");
-
-// auto-hide search message after 5s
 setTimeout(()=>searchHint.style.display="none",5000);
 </script>
 
