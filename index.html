@@ -6,50 +6,32 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-:root {
-  --bg: #0b0b0f;
-  --card: #1b1b24;
-  --panel: #5b2bd6;
-  --glow: #7c4dff;
-}
-
-* { box-sizing: border-box; }
-
 body {
   margin: 0;
-  background: var(--bg);
+  background: #0b0b0f;
   color: #fff;
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
 }
 
-/* MAIN MENU */
 #menu {
   height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 24px;
-  flex-wrap: wrap;
+  gap: 20px;
 }
 
-.menu-btn {
-  width: 220px;
-  height: 140px;
-  background: var(--card);
-  border-radius: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.btn {
+  background: #1b1b24;
+  padding: 30px 40px;
+  border-radius: 14px;
+  cursor: pointer;
   font-size: 22px;
   font-weight: 600;
-  cursor: pointer;
-  transition: transform .2s, box-shadow .2s, background .2s;
 }
 
-.menu-btn:hover {
-  transform: scale(1.06);
-  background: var(--panel);
-  box-shadow: 0 0 25px var(--glow);
+.btn:hover {
+  background: #5b2bd6;
 }
 </style>
 </head>
@@ -57,17 +39,8 @@ body {
 <body>
 
 <div id="menu">
-  <div class="menu-btn" onclick="location.href='Movie.html'">
-    🎬 Movies
-  </div>
-
-  <div class="menu-btn" onclick="location.href='tv.html'">
-    📺 TV Shows
-  </div>
-
-  <div class="menu-btn" onclick="location.href='guide.html'">
-    📅 Guide
-  </div>
+  <div class="btn" onclick="location.href='movie.html'">🎬 Movies</div>
+  <div class="btn" onclick="location.href='tv.html'">📺 TV</div>
 </div>
 
 </body>
