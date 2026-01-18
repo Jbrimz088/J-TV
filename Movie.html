@@ -22,7 +22,7 @@ body {
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
 }
 
-/* GRID */
+/* MOVIE GRID */
 #grid {
   padding: 24px;
   display: grid;
@@ -69,7 +69,7 @@ body {
   background: #000;
 }
 
-/* BACK BUTTON (OVERLAY) */
+/* BACK BUTTON */
 #backBtn {
   position: fixed;
   top: 16px;
@@ -102,12 +102,13 @@ body {
 </div>
 
 <script>
-// ============================
-// ADD MOVIES HERE (EASY MODE)
-// ============================
+// =================================================
+// EASY MODE: ADD MOVIES HERE
+// VidKing uses TMDB IDs
+// =================================================
 const MOVIES = [
   {
-    title: "Zootopia 2",
+    title: "Zootopia",
     tmdb: 1084242,
     poster: "https://image.tmdb.org/t/p/w500/hlK0e0wAQ3VLuJcsfIYPvb4JVud.jpg"
   },
@@ -123,9 +124,9 @@ const MOVIES = [
   }
 ];
 
-// ============================
-// BUILD GRID
-// ============================
+// =================================================
+// BUILD MOVIE GRID
+// =================================================
 const grid = document.getElementById("grid");
 
 MOVIES.forEach(movie => {
@@ -139,15 +140,26 @@ MOVIES.forEach(movie => {
   grid.appendChild(card);
 });
 
-// ============================
-// PLAYER LOGIC
-// ============================
+// =================================================
+// PLAYER LOGIC (VIDKING + OXYGEN)
+// =================================================
 function playMovie(tmdbId) {
   grid.style.display = "none";
   document.getElementById("player").style.display = "block";
   document.getElementById("backBtn").style.display = "block";
+
+  const params = new URLSearchParams({
+    autoPlay: "true",
+    nextEpisode: "true",
+    episodeSelector: "true",
+    source: "oxygen"
+  });
+
   document.getElementById("frame").src =
-    "https://www.vidking.net/embed/movie/" + tmdbId;
+    "https://www.vidking.net/embed/movie/" +
+    tmdbId +
+    "?" +
+    params.toString();
 }
 
 function goBack() {
