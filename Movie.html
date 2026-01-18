@@ -131,11 +131,11 @@ body{
   background:#333;
 }
 
-/* ===== OXYGEN HINT (BIG + BOTTOM RIGHT) ===== */
+/* ===== OXYGEN HINT (CORRECTLY AIMED) ===== */
 #oxygenHint{
   position:absolute;
-  bottom:140px;
-  right:120px;
+  bottom:150px;
+  right:190px; /* shifted LEFT to align with server icon */
   z-index:15;
   display:none;
   pointer-events:none;
@@ -148,7 +148,7 @@ body{
   box-shadow:0 0 30px var(--glow);
   font-size:18px;
   font-weight:700;
-  max-width:320px;
+  max-width:340px;
 }
 
 #oxygenHint .arrow{
@@ -158,10 +158,10 @@ body{
   animation:bounce 1.2s infinite;
 }
 
-/* Arrow bounce */
+/* Arrow bounce down-left */
 @keyframes bounce{
   0%,100%{transform:translate(0,0)}
-  50%{transform:translate(10px,10px)}
+  50%{transform:translate(-12px,12px)}
 }
 </style>
 </head>
@@ -194,7 +194,7 @@ body{
       Click <b>Select Source</b><br>
       then choose <b>Oxygen</b> for best quality
     </div>
-    <div class="arrow">↘</div>
+    <div class="arrow">↙</div>
   </div>
 </div>
 
