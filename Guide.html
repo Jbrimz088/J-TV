@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Guide • J-TV</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+:root{
+  --bg:#0b0b0f;
+  --card:#1b1b24;
+  --panel:#5b2bd6;
+  --glow:#7c4dff;
+}
+
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  background:var(--bg);
+  color:#fff;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
+}
+
+/* HEADER */
+header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:14px;
+}
+
+header h1{
+  margin:0;
+  font-size:26px;
+}
+
+header button{
+  background:var(--card);
+  border:none;
+  color:#fff;
+  padding:8px 14px;
+  border-radius:999px;
+  cursor:pointer;
+  font-weight:600;
+}
+
+/* GRID */
+#channels{
+  padding:14px;
+  display:grid;
+  gap:14px;
+}
+
+.channel{
+  background:var(--card);
+  border-radius:16px;
+  padding:14px;
+}
+
+.channel h2{
+  margin:0 0 8px 0;
+}
+
+.item{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:8px 0;
+  border-top:1px solid #222;
+}
+
+.item:first-child{border-top:none}
+
+.item span{
+  font-size:13px;
+  color:#aaa;
+}
+
+.item button{
+  background:var(--panel);
+  border:none;
+  color:#fff;
+  padding:6px 12px;
+  border-radius:999px;
+  cursor:pointer;
+  font-weight:600;
+}
+
+/* AD OVERLAY */
+#adOverlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.85);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:50;
+  font-size:28px;
+  font-weight:800;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>📺 Live Guide</h1>
+  <button onclick="location.href='index.html'">Home</button>
+</header>
+
+<div id="channels"></div>
+
+<div id="adOverlay">Ad Break</div>
+
+<script>
+// ===============================
+// FAST-STYLE CHANNEL DATA
+// ===============================
+const CHANNELS = [
+  {
+    name:"Action Channel",
+    playlist:[
+      {title:"The Dark Knight", type:"movie", length:9000},
+      {title:"Mad Max: Fury Road", type:"movie", length:7200}
+    ]
+  },
+  {
+    name:"Drama Channel",
+    playlist:[
+      {title:"Breaking Bad", type:"tv"},
+      {title:"Better Call Saul", type:"tv"}
+    ]
+  },
+  {
+    name:"Sci-Fi Channel",
+    playlist:[
+      {title:"Interstellar", type:"movie", length:9600},
+      {title:"Inception", type:"movie", length:9000}
+    ]
+  },
+  {
+    name:"Comedy Channel",
+    playlist:[
+      {title:"The Office", type:"tv"},
+      {title:"Parks and Recreation", type:"tv"}
+    ]
+  }
+];
+
+// ===============================
+// TIME-BASED ROTATION
+// ===============================
+function getCurrentItem(channel){
+  const now = Date.now()/1000;
+  let total = 0;
+  channel.playlist.forEach(i=>total += i.length || 1800);
+  let t = now % total;
+
+  for(const item of channel.playlist){
+    const len = item.length || 1800;
+    if(t < len) return item;
+    t -= len;
+  }
+}
+
+// ===============================
+// RENDER GUIDE
+// ===============================
+function renderGuide(){
+  const wrap = document.getElementById("channels");
+  wrap.innerHTML = "";
+
+  CHANNELS.forEach(ch=>{
+    const current = getCurrentItem(ch);
+    const next = ch.playlist[(ch.playlist.indexOf(current)+1)%ch.playlist.length];
+
+    const div = document.createElement("div");
+    div.className="channel";
+    div.innerHTML=`
+      <h2>${ch.name}</h2>
+
+      <div class="item">
+        <div>
+          <strong>Now</strong> — ${current.title}<br>
+          <span>${current.type.toUpperCase()}</span>
+        </div>
+        <button onclick="openItem('${current.type}')">Watch</button>
+      </div>
+
+      <div class="item">
+        <div>
+          <strong>Next</strong> — ${next.title}<br>
+          <span>${next.type.toUpperCase()}</span>
+        </div>
+      </div>
+    `;
+    wrap.appendChild(div);
+  });
+}
+
+// ===============================
+// WATCH
+// ===============================
+function openItem(type){
+  location.href = type === "movie" ? "movie.html" : "tv.html";
+}
+
+// ===============================
+// FAKE ADS (EVERY 5 MINUTES)
+// ===============================
+setInterval(()=>{
+  const ad = document.getElementById("adOverlay");
+  ad.style.display="flex";
+  setTimeout(()=>ad.style.display="none",4000);
+},300000);
+
+// INIT
+renderGuide();
+setInterval(renderGuide,60000);
+</script>
+
+</body>
+</html>
