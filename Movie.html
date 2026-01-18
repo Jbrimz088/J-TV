@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-:root {
+:root{
   --bg:#0b0b0f;
   --card:#1b1b24;
   --panel:#5b2bd6;
@@ -22,7 +22,7 @@ body{
   font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
 }
 
-/* TOP CONTROLS */
+/* CONTROLS */
 #controls{
   position:sticky;
   top:0;
@@ -31,7 +31,6 @@ body{
   padding:12px;
   display:flex;
   gap:10px;
-  flex-wrap:wrap;
   align-items:center;
 }
 
@@ -98,6 +97,7 @@ body{
 #player{
   display:none;
   height:100vh;
+  position:relative;
 }
 
 #player iframe{
@@ -107,15 +107,15 @@ body{
   background:#000;
 }
 
-/* BACK BUTTONS */
-#backPlayer, #backHome{
+/* BACK */
+#backPlayer,#backHome{
   position:fixed;
   top:14px;
   padding:10px 14px;
   border-radius:999px;
   font-weight:600;
   cursor:pointer;
-  z-index:10;
+  z-index:20;
   border:none;
   color:#fff;
 }
@@ -129,6 +129,38 @@ body{
 #backHome{
   right:14px;
   background:#333;
+}
+
+/* ===== OXYGEN HINT OVERLAY ===== */
+#oxygenHint{
+  position:absolute;
+  bottom:110px;
+  left:50%;
+  transform:translateX(-50%);
+  z-index:15;
+  display:none;
+  text-align:center;
+  pointer-events:none;
+}
+
+#oxygenHint .bubble{
+  background:#000;
+  padding:12px 16px;
+  border-radius:12px;
+  box-shadow:0 0 20px var(--glow);
+  font-size:14px;
+  font-weight:600;
+}
+
+#oxygenHint .arrow{
+  margin-top:8px;
+  font-size:26px;
+  animation:bounce 1s infinite;
+}
+
+@keyframes bounce{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(8px)}
 }
 </style>
 </head>
@@ -154,104 +186,90 @@ body{
     sandbox="allow-scripts allow-same-origin allow-forms"
     allow="autoplay; fullscreen">
   </iframe>
+
+  <!-- OXYGEN HINT -->
+  <div id="oxygenHint">
+    <div class="bubble">Tap “Select Source” → choose <b>Oxygen</b></div>
+    <div class="arrow">⬇️</div>
+  </div>
 </div>
 
 <script>
-// ==========================
-// CONFIG
-// ==========================
-const TMDB_KEY = "670f376983f73b67d757e9a951a3a5a9";
-const IMG = "https://image.tmdb.org/t/p/w500";
+// ================= CONFIG =================
+const TMDB_KEY="670f376983f73b67d757e9a951a3a5a9";
+const IMG="https://image.tmdb.org/t/p/w500";
 
-const embedParams = new URLSearchParams({
+const embedParams=new URLSearchParams({
   autoPlay:"true",
-  source:"oxygen"
+  nextEpisode:"true",
+  episodeSelector:"true"
 });
 
-// ==========================
-// ELEMENTS
-// ==========================
-const grid = document.getElementById("grid");
-const controls = document.getElementById("controls");
-const buttons = document.querySelectorAll("#controls button[data-feed]");
-const player = document.getElementById("player");
-const frame = document.getElementById("frame");
-const search = document.getElementById("search");
-const backPlayer = document.getElementById("backPlayer");
+// ================= ELEMENTS =================
+const grid=document.getElementById("grid");
+const controls=document.getElementById("controls");
+const buttons=document.querySelectorAll("#controls button[data-feed]");
+const player=document.getElementById("player");
+const frame=document.getElementById("frame");
+const search=document.getElementById("search");
+const backPlayer=document.getElementById("backPlayer");
+const oxygenHint=document.getElementById("oxygenHint");
 
-// ==========================
-// HELPERS
-// ==========================
-function clearGrid(){
-  grid.innerHTML="";
-}
-
+// ================= HELPERS =================
+function clearGrid(){grid.innerHTML=""}
 function setActive(feed){
-  buttons.forEach(b=>{
-    b.classList.toggle("active", b.dataset.feed === feed);
-  });
+  buttons.forEach(b=>b.classList.toggle("active",b.dataset.feed===feed))
 }
 
-// ==========================
-// FEEDS (MOVIES ONLY)
-// ==========================
+// ================= FEEDS =================
 async function loadFeed(feed){
   setActive(feed);
   clearGrid();
-  search.value = "";
+  search.value="";
 
-  const url =
-    feed === "trending"
-      ? `https://api.themoviedb.org/3/trending/movie/week?api_key=${TMDB_KEY}`
-      : `https://api.themoviedb.org/3/movie/${feed}?api_key=${TMDB_KEY}`;
+  const url=feed==="trending"
+    ?`https://api.themoviedb.org/3/trending/movie/week?api_key=${TMDB_KEY}`
+    :`https://api.themoviedb.org/3/movie/${feed}?api_key=${TMDB_KEY}`;
 
-  const res = await fetch(url);
-  const data = await res.json();
+  const res=await fetch(url);
+  const data=await res.json();
   data.results.forEach(addCard);
 }
 
 function addCard(item){
-  if(!item.poster_path) return;
-
-  const card = document.createElement("div");
-  card.className = "card";
-  card.innerHTML = `
-    <img src="${IMG}${item.poster_path}">
-    <div class="title">${item.title}</div>
-  `;
-  card.onclick = ()=>play(item.id);
-  grid.appendChild(card);
+  if(!item.poster_path)return;
+  const c=document.createElement("div");
+  c.className="card";
+  c.innerHTML=`<img src="${IMG}${item.poster_path}"><div class="title">${item.title}</div>`;
+  c.onclick=()=>play(item.id);
+  grid.appendChild(c);
 }
 
-// ==========================
-// SEARCH (MOVIES ONLY)
-// ==========================
+// ================= SEARCH =================
 async function doSearch(){
-  const q = search.value.trim();
-  if(!q) return;
-
+  const q=search.value.trim();
+  if(!q)return;
   buttons.forEach(b=>b.classList.remove("active"));
   clearGrid();
-
-  const url =
-    `https://api.themoviedb.org/3/search/movie?api_key=${TMDB_KEY}&query=${encodeURIComponent(q)}`;
-
-  const res = await fetch(url);
-  const data = await res.json();
+  const res=await fetch(
+    `https://api.themoviedb.org/3/search/movie?api_key=${TMDB_KEY}&query=${encodeURIComponent(q)}`
+  );
+  const data=await res.json();
   data.results.forEach(addCard);
 }
 
-// ==========================
-// PLAYER
-// ==========================
+// ================= PLAYER =================
 function play(id){
   grid.style.display="none";
   controls.style.display="none";
   player.style.display="block";
   backPlayer.style.display="block";
 
-  frame.src =
-    `https://www.vidking.net/embed/movie/${id}?${embedParams.toString()}`;
+  frame.src=`https://www.vidking.net/embed/movie/${id}?${embedParams.toString()}`;
+
+  // Show Oxygen hint for 2 seconds
+  oxygenHint.style.display="block";
+  setTimeout(()=>oxygenHint.style.display="none",2000);
 }
 
 function exitPlayer(){
@@ -262,14 +280,10 @@ function exitPlayer(){
   controls.style.display="flex";
 }
 
-// ==========================
-// EVENTS
-// ==========================
-buttons.forEach(btn=>{
-  btn.onclick = ()=>loadFeed(btn.dataset.feed);
-});
+// ================= EVENTS =================
+buttons.forEach(b=>b.onclick=()=>loadFeed(b.dataset.feed));
 
-// DEFAULT LOAD (NO BLACK SCREEN)
+// DEFAULT LOAD
 loadFeed("trending");
 </script>
 
