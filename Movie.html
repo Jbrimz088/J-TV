@@ -139,10 +139,10 @@ body{
 <button id="backHome" onclick="location.href='index.html'">Home</button>
 
 <div id="controls">
-  <button onclick="loadFeed('trending')" class="active">Trending</button>
-  <button onclick="loadFeed('popular')">Popular</button>
-  <button onclick="loadFeed('top_rated')">Top Rated</button>
-  <button onclick="loadFeed('now_playing')">Now Playing</button>
+  <button data-feed="trending" class="active">Trending</button>
+  <button data-feed="popular">Popular</button>
+  <button data-feed="top_rated">Top Rated</button>
+  <button data-feed="now_playing">Now Playing</button>
   <input id="search" placeholder="Search movies…" onkeydown="if(event.key==='Enter')doSearch()">
 </div>
 
@@ -169,57 +169,80 @@ const embedParams = new URLSearchParams({
 });
 
 // ==========================
+// ELEMENTS
+// ==========================
+const grid = document.getElementById("grid");
+const controls = document.getElementById("controls");
+const buttons = document.querySelectorAll("#controls button[data-feed]");
+const player = document.getElementById("player");
+const frame = document.getElementById("frame");
+const search = document.getElementById("search");
+const backPlayer = document.getElementById("backPlayer");
+
+// ==========================
 // HELPERS
 // ==========================
-function clearGrid(){ grid.innerHTML=""; }
+function clearGrid(){
+  grid.innerHTML="";
+}
 
-function addCard(item){
-  if(!item.poster_path) return;
-
-  const card=document.createElement("div");
-  card.className="card";
-  card.innerHTML=`
-    <img src="${IMG}${item.poster_path}">
-    <div class="title">${item.title}</div>
-  `;
-  card.onclick=()=>play(item.id);
-  grid.appendChild(card);
+function setActive(feed){
+  buttons.forEach(b=>{
+    b.classList.toggle("active", b.dataset.feed === feed);
+  });
 }
 
 // ==========================
 // FEEDS (MOVIES ONLY)
 // ==========================
 async function loadFeed(feed){
-  document.querySelectorAll("#controls button").forEach(b=>b.classList.remove("active"));
-  event.target.classList.add("active");
+  setActive(feed);
   clearGrid();
+  search.value = "";
 
   const url =
-    feed==="trending"
+    feed === "trending"
       ? `https://api.themoviedb.org/3/trending/movie/week?api_key=${TMDB_KEY}`
       : `https://api.themoviedb.org/3/movie/${feed}?api_key=${TMDB_KEY}`;
 
-  const res=await fetch(url);
-  const data=await res.json();
+  const res = await fetch(url);
+  const data = await res.json();
   data.results.forEach(addCard);
+}
+
+function addCard(item){
+  if(!item.poster_path) return;
+
+  const card = document.createElement("div");
+  card.className = "card";
+  card.innerHTML = `
+    <img src="${IMG}${item.poster_path}">
+    <div class="title">${item.title}</div>
+  `;
+  card.onclick = ()=>play(item.id);
+  grid.appendChild(card);
 }
 
 // ==========================
 // SEARCH (MOVIES ONLY)
 // ==========================
 async function doSearch(){
-  const q=search.value.trim();
+  const q = search.value.trim();
   if(!q) return;
+
+  buttons.forEach(b=>b.classList.remove("active"));
   clearGrid();
 
-  const url=`https://api.themoviedb.org/3/search/movie?api_key=${TMDB_KEY}&query=${encodeURIComponent(q)}`;
-  const res=await fetch(url);
-  const data=await res.json();
+  const url =
+    `https://api.themoviedb.org/3/search/movie?api_key=${TMDB_KEY}&query=${encodeURIComponent(q)}`;
+
+  const res = await fetch(url);
+  const data = await res.json();
   data.results.forEach(addCard);
 }
 
 // ==========================
-// PLAYER (LOCKED)
+// PLAYER
 // ==========================
 function play(id){
   grid.style.display="none";
@@ -227,7 +250,8 @@ function play(id){
   player.style.display="block";
   backPlayer.style.display="block";
 
-  frame.src=`https://www.vidking.net/embed/movie/${id}?${embedParams.toString()}`;
+  frame.src =
+    `https://www.vidking.net/embed/movie/${id}?${embedParams.toString()}`;
 }
 
 function exitPlayer(){
@@ -239,14 +263,13 @@ function exitPlayer(){
 }
 
 // ==========================
-const grid=document.getElementById("grid");
-const controls=document.getElementById("controls");
-const player=document.getElementById("player");
-const frame=document.getElementById("frame");
-const search=document.getElementById("search");
-const backPlayer=document.getElementById("backPlayer");
+// EVENTS
+// ==========================
+buttons.forEach(btn=>{
+  btn.onclick = ()=>loadFeed(btn.dataset.feed);
+});
 
-// INITIAL LOAD
+// DEFAULT LOAD (NO BLACK SCREEN)
 loadFeed("trending");
 </script>
 
