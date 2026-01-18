@@ -61,6 +61,17 @@ body{
   border-radius:999px;
 }
 
+/* SEARCH MESSAGE */
+#searchHint{
+  background:#000;
+  margin:10px;
+  padding:14px 16px;
+  border-radius:14px;
+  box-shadow:0 0 20px var(--glow);
+  font-size:14px;
+  font-weight:600;
+}
+
 /* GRID */
 #grid{
   padding:20px;
@@ -158,6 +169,10 @@ body{
   <input id="search" placeholder="Search TV shows…" onkeydown="if(event.key==='Enter')doSearch()">
 </div>
 
+<div id="searchHint">
+  Not every TV show appears here — use <b>Search</b> to find any show.
+</div>
+
 <div id="grid"></div>
 
 <div id="player">
@@ -179,27 +194,28 @@ body{
 
 <script>
 // ================= CONFIG =================
-const TMDB_KEY = "670f376983f73b67d757e9a951a3a5a9";
-const IMG = "https://image.tmdb.org/t/p/w500";
+const TMDB_KEY="670f376983f73b67d757e9a951a3a5a9";
+const IMG="https://image.tmdb.org/t/p/w500";
 
-const embedParams = new URLSearchParams({
+const embedParams=new URLSearchParams({
   autoPlay:"true",
   nextEpisode:"true",
   episodeSelector:"true"
 });
 
 // ================= ELEMENTS =================
-const grid = document.getElementById("grid");
-const controls = document.getElementById("controls");
-const buttons = document.querySelectorAll("#controls button[data-feed]");
-const player = document.getElementById("player");
-const frame = document.getElementById("frame");
-const search = document.getElementById("search");
-const backPlayer = document.getElementById("backPlayer");
-const oxygenHint = document.getElementById("oxygenHint");
+const grid=document.getElementById("grid");
+const controls=document.getElementById("controls");
+const buttons=document.querySelectorAll("#controls button[data-feed]");
+const player=document.getElementById("player");
+const frame=document.getElementById("frame");
+const search=document.getElementById("search");
+const backPlayer=document.getElementById("backPlayer");
+const oxygenHint=document.getElementById("oxygenHint");
+const searchHint=document.getElementById("searchHint");
 
 // ================= HELPERS =================
-function clearGrid(){ grid.innerHTML=""; }
+function clearGrid(){grid.innerHTML=""}
 function setActive(feed){
   buttons.forEach(b=>b.classList.toggle("active", b.dataset.feed===feed));
 }
@@ -211,17 +227,17 @@ async function loadFeed(feed){
   search.value="";
 
   const url =
-    feed === "trending"
+    feed==="trending"
       ? `https://api.themoviedb.org/3/trending/tv/week?api_key=${TMDB_KEY}`
       : `https://api.themoviedb.org/3/tv/${feed}?api_key=${TMDB_KEY}`;
 
-  const res = await fetch(url);
-  const data = await res.json();
+  const res=await fetch(url);
+  const data=await res.json();
   data.results.forEach(addCard);
 }
 
 function addCard(item){
-  if(!item.poster_path) return;
+  if(!item.poster_path)return;
   const c=document.createElement("div");
   c.className="card";
   c.innerHTML=`
@@ -235,7 +251,7 @@ function addCard(item){
 // ================= SEARCH =================
 async function doSearch(){
   const q=search.value.trim();
-  if(!q) return;
+  if(!q)return;
   buttons.forEach(b=>b.classList.remove("active"));
   clearGrid();
 
@@ -250,10 +266,10 @@ async function doSearch(){
 function play(id){
   grid.style.display="none";
   controls.style.display="none";
+  searchHint.style.display="none";
   player.style.display="block";
   backPlayer.style.display="block";
 
-  // default: Season 1, Episode 1
   frame.src =
     `https://www.vidking.net/embed/tv/${id}/1/1?${embedParams.toString()}`;
 
@@ -267,11 +283,15 @@ function exitPlayer(){
   backPlayer.style.display="none";
   grid.style.display="grid";
   controls.style.display="flex";
+  searchHint.style.display="block";
 }
 
 // ================= INIT =================
 buttons.forEach(b=>b.onclick=()=>loadFeed(b.dataset.feed));
 loadFeed("trending");
+
+// auto-hide search message after 5s
+setTimeout(()=>searchHint.style.display="none",5000);
 </script>
 
 </body>
