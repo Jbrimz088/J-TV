@@ -2,209 +2,113 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>J-TV</title>
+<title>J-TV Access</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-:root{
-  --bg:#0b0b0f;
-  --card:#1b1b24;
-  --panel:#5b2bd6;
-  --glow:#7c4dff;
-  --apk:#00c853;
-  --apkGlow:#00e676;
-}
-
-*{box-sizing:border-box}
-
 body{
   margin:0;
   min-height:100vh;
-  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
-  color:#fff;
-  background:
-    linear-gradient(rgba(0,0,0,.65), rgba(0,0,0,.65)),
-    url("https://images.unsplash.com/photo-1524985069026-dd778a71c7b4?q=80&w=1920")
-    center / cover no-repeat;
-}
-
-/* CENTER */
-#container{
-  min-height:100vh;
   display:flex;
-  flex-direction:column;
   justify-content:center;
   align-items:center;
-  gap:32px;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
+  background:
+    linear-gradient(rgba(0,0,0,.75), rgba(0,0,0,.75)),
+    url("https://images.unsplash.com/photo-1524985069026-dd778a71c7b4?q=80&w=1920")
+    center / cover no-repeat;
+  color:#fff;
 }
 
-/* TITLE */
-h1{
-  font-size:64px;
-  letter-spacing:4px;
-  margin:0;
-  text-shadow:0 0 25px var(--glow);
-}
-
-/* AUTH */
-#authBox{
+#gate{
   background:rgba(0,0,0,.65);
-  padding:20px;
-  border-radius:14px;
-  display:flex;
-  gap:10px;
-  align-items:center;
+  padding:32px;
+  border-radius:16px;
+  width:100%;
+  max-width:360px;
+  text-align:center;
 }
 
-#authBox input{
-  padding:12px;
-  border-radius:10px;
+h1{
+  margin:0 0 20px;
+  letter-spacing:4px;
+}
+
+input{
+  width:100%;
+  padding:14px;
+  border-radius:12px;
   border:none;
   font-size:16px;
   outline:none;
 }
 
-#authBox button{
-  padding:12px 18px;
-  border-radius:10px;
+button{
+  margin-top:16px;
+  width:100%;
+  padding:14px;
   border:none;
+  border-radius:12px;
+  font-size:18px;
   font-weight:700;
   cursor:pointer;
-  background:var(--panel);
+  background:#7c4dff;
   color:#fff;
 }
 
 #status{
+  margin-top:14px;
   font-size:14px;
-  opacity:.8;
-}
-
-/* MENU */
-.menu{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-  gap:24px;
-  width:100%;
-  max-width:900px;
-  padding:0 24px;
-  opacity:.3;
-  pointer-events:none;
-  transition:.3s;
-}
-
-.menu.unlocked{
-  opacity:1;
-  pointer-events:auto;
-}
-
-.btn{
-  height:150px;
-  background:var(--card);
-  border-radius:20px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:22px;
-  font-weight:700;
-  cursor:pointer;
-  transition:.2s;
-  user-select:none;
-}
-
-.btn:hover{
-  background:var(--panel);
-  transform:scale(1.06);
-  box-shadow:0 0 30px var(--glow);
-}
-
-/* APK BUTTON */
-.btn.apk{
-  background:var(--apk);
-  color:#000;
-}
-
-.btn.apk:hover{
-  background:var(--apkGlow);
-  box-shadow:0 0 30px var(--apkGlow);
-}
-
-/* FOOTER */
-footer{
-  position:fixed;
-  bottom:12px;
-  width:100%;
-  text-align:center;
-  font-size:12px;
-  color:#aaa;
+  opacity:.85;
 }
 </style>
 </head>
 
 <body>
 
-<div id="container">
+<div id="gate">
   <h1>J-TV</h1>
-
-  <!-- AUTH -->
-  <div id="authBox">
-    <input id="codeInput" placeholder="Enter access code" />
-    <button onclick="checkCode()">Unlock</button>
-    <span id="status"></span>
-  </div>
-
-  <div class="menu" id="menu">
-    <div class="btn" onclick="location.href='movie.html'">🎬 Movies</div>
-    <div class="btn" onclick="location.href='tv.html'">📺 TV Shows</div>
-    <div class="btn" onclick="location.href='guide.html'">📅 Guide</div>
-
-    <div class="btn apk" onclick="location.href='https://gofile.io/d/3BmTHw'">
-      ⬇ Download APK
-    </div>
-  </div>
+  <input id="codeInput" placeholder="Enter access code" />
+  <button onclick="unlock()">Unlock</button>
+  <div id="status"></div>
 </div>
-
-<footer>
-  J-TV · Stream hub
-</footer>
 
 <script>
 const WORKER = "https://black-wildflower-8690.jcbrimley.workers.dev/";
 
-/* Auto unlock */
+// already unlocked → skip gate
 if(localStorage.getItem("jtv_access")==="true"){
-  document.getElementById("menu").classList.add("unlocked");
-  document.getElementById("authBox").style.display="none";
+  location.href = "home.html";
 }
 
-async function checkCode(){
+async function unlock(){
   const code = document.getElementById("codeInput").value.trim();
   const status = document.getElementById("status");
 
   if(!code){
-    status.textContent="Enter a code";
+    status.textContent = "Enter a code";
     return;
   }
 
-  status.textContent="Checking…";
+  status.textContent = "Checking…";
 
   try{
     const res = await fetch(WORKER,{
       method:"POST",
       headers:{ "Content-Type":"application/json" },
-      body:JSON.stringify({code})
+      body:JSON.stringify({ code })
     });
 
     const data = await res.json();
 
     if(data.ok){
       localStorage.setItem("jtv_access","true");
-      document.getElementById("menu").classList.add("unlocked");
-      document.getElementById("authBox").style.display="none";
+      location.href = "main.html";
     }else{
-      status.textContent="Invalid code";
+      status.textContent = "Invalid code";
     }
   }catch{
-    status.textContent="Server error";
+    status.textContent = "Server error";
   }
 }
 </script>
