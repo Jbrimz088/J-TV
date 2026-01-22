@@ -6,6 +6,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
+:root{
+  --panel:#5b2bd6;
+  --glow:#7c4dff;
+}
+
+*{box-sizing:border-box}
+
 body{
   margin:0;
   min-height:100vh;
@@ -32,6 +39,7 @@ body{
 h1{
   margin:0 0 20px;
   letter-spacing:4px;
+  text-shadow:0 0 20px var(--glow);
 }
 
 input{
@@ -52,7 +60,7 @@ button{
   font-size:18px;
   font-weight:700;
   cursor:pointer;
-  background:#7c4dff;
+  background:var(--panel);
   color:#fff;
 }
 
@@ -74,12 +82,14 @@ button{
 </div>
 
 <script>
-const WORKER = "https://black-wildflower-8690.jcbrimley.workers.dev/";
+/*
+IMPORTANT:
+- NO auto redirect here
+- NO kick/version check here
+- This page NEVER redirects unless login succeeds
+*/
 
-// already unlocked → skip gate
-if(localStorage.getItem("jtv_access")==="true"){
-  location.href = "index.html";
-}
+const WORKER = "YOUR_WORKER_URL_HERE";
 
 async function unlock(){
   const code = document.getElementById("codeInput").value.trim();
@@ -102,8 +112,12 @@ async function unlock(){
     const data = await res.json();
 
     if(data.ok){
+      // ✅ SAVE SESSION
       localStorage.setItem("jtv_access","true");
-      location.href = "main.html";
+      localStorage.setItem("jtv_version", data.version);
+
+      // ✅ GO TO MAIN PAGE
+      location.href = "home.html";
     }else{
       status.textContent = "Invalid code";
     }
