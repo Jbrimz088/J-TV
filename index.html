@@ -32,7 +32,7 @@ body{
   padding:32px;
   border-radius:16px;
   width:100%;
-  max-width:360px;
+  max-width:380px;
   text-align:center;
 }
 
@@ -49,10 +49,10 @@ input{
   border:none;
   font-size:16px;
   outline:none;
+  margin-bottom:12px;
 }
 
 button{
-  margin-top:16px;
   width:100%;
   padding:14px;
   border:none;
@@ -76,27 +76,36 @@ button{
 
 <div id="gate">
   <h1>J-TV</h1>
-  <input id="codeInput" placeholder="Enter access code" />
-  <button onclick="unlock()">Unlock</button>
+
+  <input id="userInput" placeholder="Username" />
+  <input id="codeInput" placeholder="Password / Code" type="password" />
+
+  <button onclick="unlock()">Login</button>
   <div id="status"></div>
 </div>
 
 <script>
 /*
-IMPORTANT:
-- NO auto redirect here
-- NO kick/version check here
-- This page NEVER redirects unless login succeeds
+RULES:
+- This page CAN redirect if already logged in
+- This page NEVER kicks users out
+- Kick/version logic is NOT here
 */
 
 const WORKER = "https://black-wildflower-8690.jcbrimley.workers.dev/";
 
+// ✅ SKIP LOGIN IF ALREADY AUTHED
+if (localStorage.getItem("jtv_access") === "true") {
+  location.href = "home.html";
+}
+
 async function unlock(){
+  const user = document.getElementById("userInput").value.trim();
   const code = document.getElementById("codeInput").value.trim();
   const status = document.getElementById("status");
 
-  if(!code){
-    status.textContent = "Enter a code";
+  if(!user || !code){
+    status.textContent = "Enter username and password";
     return;
   }
 
@@ -115,11 +124,11 @@ async function unlock(){
       // ✅ SAVE SESSION
       localStorage.setItem("jtv_access","true");
       localStorage.setItem("jtv_version", data.version);
+      localStorage.setItem("jtv_user", user);
 
-      // ✅ GO TO MAIN PAGE
-      location.href = "main.html";
+      location.href = "home.html";
     }else{
-      status.textContent = "Invalid code";
+      status.textContent = "Invalid login";
     }
   }catch{
     status.textContent = "Server error";
