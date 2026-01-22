@@ -92,7 +92,7 @@ RULES:
 - NO kick/version logic here
 */
 
-const WORKER = "YOUR_WORKER_URL_HERE";
+const WORKER = "https://black-wildflower-8690.jcbrimley.workers.dev/";
 
 async function unlock(){
   const user = document.getElementById("userInput").value.trim();
@@ -120,7 +120,7 @@ async function unlock(){
       localStorage.setItem("jtv_version", data.version);
       localStorage.setItem("jtv_user", user);
 
-      location.href = "home.html";
+      location.href = "main.html";
     }else{
       status.textContent = "Invalid login";
     }
