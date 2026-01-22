@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>J-TV Access</title>
+<title>J-TV Login</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
@@ -77,29 +77,28 @@ button{
 <div id="gate">
   <h1>J-TV</h1>
 
-  <input id="userInput" placeholder="Username" />
-  <input id="codeInput" placeholder="Password / Code" type="password" />
+  <input id="userInput" placeholder="Username" autocomplete="username">
+  <input id="passInput" placeholder="Password" type="password" autocomplete="current-password">
 
-  <button onclick="unlock()">Login</button>
+  <button onclick="login()">Login</button>
   <div id="status"></div>
 </div>
 
 <script>
 /*
-RULES:
-- NO auto redirect
-- NO skip login
-- NO kick/version logic here
+NO auto redirect
+NO skip login
+NO kick logic here
 */
 
 const WORKER = "https://black-wildflower-8690.jcbrimley.workers.dev/";
 
-async function unlock(){
-  const user = document.getElementById("userInput").value.trim();
-  const code = document.getElementById("codeInput").value.trim();
+async function login(){
+  const username = document.getElementById("userInput").value.trim();
+  const password = document.getElementById("passInput").value.trim();
   const status = document.getElementById("status");
 
-  if(!user || !code){
+  if(!username || !password){
     status.textContent = "Enter username and password";
     return;
   }
@@ -107,25 +106,28 @@ async function unlock(){
   status.textContent = "Checking…";
 
   try{
-    const res = await fetch(WORKER,{
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body:JSON.stringify({ code })
+    const res = await fetch(WORKER, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        username: username,
+        password: password
+      })
     });
 
     const data = await res.json();
 
     if(data.ok){
-      localStorage.setItem("jtv_access","true");
+      localStorage.setItem("jtv_access", "true");
       localStorage.setItem("jtv_version", data.version);
-      localStorage.setItem("jtv_user", user);
+      localStorage.setItem("jtv_user", data.user || username);
 
       location.href = "main.html";
-    }else{
-      status.textContent = "Invalid login";
+    } else {
+      status.textContent = "Invalid username or password";
     }
-  }catch{
-    status.textContent = "Server error";
+  } catch (e){
+    status.textContent = "Connection error";
   }
 }
 </script>
