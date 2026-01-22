@@ -87,17 +87,12 @@ button{
 <script>
 /*
 RULES:
-- This page CAN redirect if already logged in
-- This page NEVER kicks users out
-- Kick/version logic is NOT here
+- NO auto redirect
+- NO skip login
+- NO kick/version logic here
 */
 
-const WORKER = "https://black-wildflower-8690.jcbrimley.workers.dev/";
-
-// ✅ SKIP LOGIN IF ALREADY AUTHED
-if (localStorage.getItem("jtv_access") === "true") {
-  location.href = "home.html";
-}
+const WORKER = "YOUR_WORKER_URL_HERE";
 
 async function unlock(){
   const user = document.getElementById("userInput").value.trim();
@@ -121,7 +116,6 @@ async function unlock(){
     const data = await res.json();
 
     if(data.ok){
-      // ✅ SAVE SESSION
       localStorage.setItem("jtv_access","true");
       localStorage.setItem("jtv_version", data.version);
       localStorage.setItem("jtv_user", user);
