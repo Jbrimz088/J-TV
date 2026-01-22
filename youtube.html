@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>YouTube Player Picker</title>
+<title>YouTube Link Loader</title>
 
 <style>
 body {
@@ -12,60 +12,123 @@ body {
   font-family: Arial, sans-serif;
 }
 
-.notice {
-  padding: 12px 16px;
+.top {
+  padding: 14px;
   background: #181818;
   border-bottom: 1px solid #222;
-  font-size: 14px;
 }
 
-.notice strong {
-  color: #b86bff;
+input {
+  width: 70%;
+  max-width: 600px;
+  padding: 10px;
+  background: #111;
+  color: white;
+  border: 1px solid #444;
+}
+
+button {
+  padding: 10px 16px;
+  margin-left: 8px;
+  background: #7b2cff;
+  border: none;
+  color: white;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #9b5cff;
 }
 
 #player {
   margin: 20px auto;
   max-width: 900px;
 }
+
+.output {
+  padding: 12px;
+  text-align: center;
+  font-size: 14px;
+}
+
+.output a {
+  color: #6ecbff;
+  word-break: break-all;
+}
 </style>
 </head>
 
 <body>
 
-<div class="notice">
-  <strong>How to use:</strong>
-  Find a video on YouTube (app or site), tap
-  <strong>☰ / Share</strong>, copy the URL, then paste it into the converter.
+<div class="top">
+  <input id="url" placeholder="Paste YouTube link here">
+  <button onclick="loadVideo()">Load</button>
 </div>
 
 <div id="player"></div>
 
+<div class="output" id="out"></div>
+
 <script>
-/* Load YouTube IFrame API */
+// Load YouTube IFrame API
 var tag = document.createElement("script");
 tag.src = "https://www.youtube.com/iframe_api";
 document.head.appendChild(tag);
 
 var player;
 
+// Extract video ID + timestamp
+function parseYouTube(url) {
+  try {
+    const u = new URL(url);
+    let id = "";
+    let t = "";
+
+    if (u.hostname.includes("youtu.be")) {
+      id = u.pathname.slice(1);
+      t = u.searchParams.get("t") || "";
+    }
+
+    if (u.hostname.includes("youtube.com")) {
+      id = u.searchParams.get("v") || "";
+      t = u.searchParams.get("t") || "";
+    }
+
+    if (!id) return null;
+    return { id, t };
+  } catch {
+    return null;
+  }
+}
+
 window.onYouTubeIframeAPIReady = function () {
   player = new YT.Player("player", {
     height: "390",
     width: "640",
-    videoId: "JbFJWHWChJE", // starter video
-    playerVars: {
-      rel: 0,
-      modestbranding: 1
-    },
-    events: {
-      onReady: onPlayerReady
-    }
+    videoId: "",
+    playerVars: { rel: 0 }
   });
 };
 
-function onPlayerReady(event) {
-  // Autoplay optional — remove if you don’t want it
-  event.target.playVideo();
+function loadVideo() {
+  const input = document.getElementById("url").value.trim();
+  const data = parseYouTube(input);
+  if (!data) {
+    alert("Invalid YouTube link");
+    return;
+  }
+
+  player.loadVideoById({
+    videoId: data.id,
+    startSeconds: data.t ? parseInt(data.t) : 0
+  });
+
+  // pie.yt link output
+  let pie = `https://pie.yt/?v=https://youtu.be/${data.id}`;
+  if (data.t) pie += `&t=${data.t}`;
+
+  document.getElementById("out").innerHTML =
+    `Open with pie.yt:<br><a href="${pie}" target="_blank">${pie}</a>`;
 }
 </script>
 
