@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Watch • J-TV</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+:root{
+  --panel:#5b2bd6;
+}
+
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  background:#000;
+  color:#fff;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
+  cursor: default;
+  overflow:hidden;
+}
+
+/* TOP BAR */
+#topbar{
+  position:fixed;
+  top:0; left:0; right:0;
+  height:56px;
+  background:rgba(0,0,0,.85);
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:0 12px;
+  z-index:100;
+}
+
+#back{
+  background:var(--panel);
+  border:none;
+  color:#fff;
+  padding:8px 14px;
+  border-radius:999px;
+  font-weight:700;
+  cursor:pointer;
+}
+
+/* PLAYER */
+iframe{
+  margin-top:56px;
+  width:100%;
+  height:calc(100vh - 56px);
+  border:none;
+  background:#000;
+}
+
+/* TV CURSOR */
+#tvCursor{
+  position:fixed;
+  width:18px;
+  height:18px;
+  background:#fff;
+  border-radius:50%;
+  box-shadow:0 0 10px #000;
+  pointer-events:none;
+  z-index:9999;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+}
+</style>
+</head>
+
+<body>
+
+<div id="topbar">
+  <button id="back" onclick="goBack()">← Back</button>
+</div>
+
+<iframe
+  id="player"
+  allow="autoplay; fullscreen"
+  allowfullscreen>
+</iframe>
+
+<!-- TV CURSOR -->
+<div id="tvCursor"></div>
+
+<script>
+/* ---------- LOAD VIDEO ---------- */
+const params = new URLSearchParams(location.search);
+const id = params.get("id");
+const type = params.get("type");
+
+let src = "";
+
+if(type === "movie"){
+  src = `https://www.vidking.net/embed/movie/${id}?autoPlay=true`;
+}
+
+if(type === "tv"){
+  const season = params.get("season") || 1;
+  const episode = params.get("episode") || 1;
+  src = `https://www.vidking.net/embed/tv/${id}/${season}/${episode}?autoPlay=true&nextEpisode=true&episodeSelector=true`;
+}
+
+document.getElementById("player").src = src;
+
+/* ---------- BACK ---------- */
+function goBack(){
+  document.getElementById("player").src="";
+  history.back();
+}
+
+/* ---------- TV CURSOR LOGIC ---------- */
+const cursor = document.getElementById("tvCursor");
+let x = window.innerWidth / 2;
+let y = window.innerHeight / 2;
+const speed = 18;
+
+function moveCursor(dx, dy){
+  x = Math.max(0, Math.min(window.innerWidth, x + dx));
+  y = Math.max(0, Math.min(window.innerHeight, y + dy));
+  cursor.style.left = x + "px";
+  cursor.style.top = y + "px";
+}
+
+/* D-PAD SUPPORT */
+document.addEventListener("keydown", e => {
+  switch(e.key){
+    case "ArrowUp": moveCursor(0, -speed); break;
+    case "ArrowDown": moveCursor(0, speed); break;
+    case "ArrowLeft": moveCursor(-speed, 0); break;
+    case "ArrowRight": moveCursor(speed, 0); break;
+  }
+});
+</script>
+
+</body>
+</html>
