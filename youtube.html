@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>YouTube Link Loader</title>
+<title>YouTube Link Converter</title>
 
 <style>
 body {
@@ -16,11 +16,12 @@ body {
   padding: 14px;
   background: #181818;
   border-bottom: 1px solid #222;
+  display: flex;
+  gap: 10px;
 }
 
 input {
-  width: 70%;
-  max-width: 600px;
+  flex: 1;
   padding: 10px;
   background: #111;
   color: white;
@@ -28,8 +29,7 @@ input {
 }
 
 button {
-  padding: 10px 16px;
-  margin-left: 8px;
+  padding: 10px 14px;
   background: #7b2cff;
   border: none;
   color: white;
@@ -40,20 +40,23 @@ button:hover {
   background: #9b5cff;
 }
 
-#player {
-  margin: 20px auto;
-  max-width: 900px;
+.back {
+  background: #333;
+}
+
+.back:hover {
+  background: #555;
 }
 
 .output {
-  padding: 12px;
+  padding: 20px;
   text-align: center;
-  font-size: 14px;
 }
 
 .output a {
   color: #6ecbff;
   word-break: break-all;
+  font-size: 14px;
 }
 </style>
 </head>
@@ -61,23 +64,18 @@ button:hover {
 <body>
 
 <div class="top">
+  <button class="back" onclick="goBack()">← Back</button>
   <input id="url" placeholder="Paste YouTube link here">
-  <button onclick="loadVideo()">Load</button>
+  <button onclick="convert()">Generate</button>
 </div>
-
-<div id="player"></div>
 
 <div class="output" id="out"></div>
 
 <script>
-// Load YouTube IFrame API
-var tag = document.createElement("script");
-tag.src = "https://www.youtube.com/iframe_api";
-document.head.appendChild(tag);
+function goBack() {
+  window.location.href = "main.html"; // 👈 change this
+}
 
-var player;
-
-// Extract video ID + timestamp
 function parseYouTube(url) {
   try {
     const u = new URL(url);
@@ -101,34 +99,20 @@ function parseYouTube(url) {
   }
 }
 
-window.onYouTubeIframeAPIReady = function () {
-  player = new YT.Player("player", {
-    height: "390",
-    width: "640",
-    videoId: "",
-    playerVars: { rel: 0 }
-  });
-};
-
-function loadVideo() {
+function convert() {
   const input = document.getElementById("url").value.trim();
   const data = parseYouTube(input);
+
   if (!data) {
     alert("Invalid YouTube link");
     return;
   }
 
-  player.loadVideoById({
-    videoId: data.id,
-    startSeconds: data.t ? parseInt(data.t) : 0
-  });
-
-  // pie.yt link output
   let pie = `https://pie.yt/?v=https://youtu.be/${data.id}`;
   if (data.t) pie += `&t=${data.t}`;
 
   document.getElementById("out").innerHTML =
-    `PLEASE OPEN! Open Ad Free Link:<br><a href="${pie}" target="_blank">${pie}</a>`;
+    `Converted link:<br><a href="${pie}" target="_blank">${pie}</a>`;
 }
 </script>
 
