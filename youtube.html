@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>YouTube Ad Free</title>
+<title>YouTube Link Converter Ad Free</title>
 
 <style>
 body {
@@ -13,19 +13,12 @@ body {
 }
 
 .top {
-  padding: 14px;
+  padding: 12px;
   background: #181818;
   border-bottom: 1px solid #222;
   display: flex;
   gap: 10px;
-}
-
-input {
-  flex: 1;
-  padding: 10px;
-  background: #111;
-  color: white;
-  border: 1px solid #444;
+  align-items: center;
 }
 
 button {
@@ -48,6 +41,14 @@ button:hover {
   background: #555;
 }
 
+input {
+  flex: 1;
+  padding: 10px;
+  background: #111;
+  color: white;
+  border: 1px solid #444;
+}
+
 .output {
   padding: 20px;
   text-align: center;
@@ -56,7 +57,6 @@ button:hover {
 .output a {
   color: #6ecbff;
   word-break: break-all;
-  font-size: 14px;
 }
 </style>
 </head>
@@ -65,6 +65,7 @@ button:hover {
 
 <div class="top">
   <button class="back" onclick="goBack()">← Back</button>
+  <button onclick="openYouTube()">Open YouTube</button>
   <input id="url" placeholder="Paste YouTube link here">
   <button onclick="convert()">Generate</button>
 </div>
@@ -73,7 +74,11 @@ button:hover {
 
 <script>
 function goBack() {
-  window.location.href = "main.html"; // 👈 change this
+  window.location.href = "main.html"; // 👈 set this
+}
+
+function openYouTube() {
+  window.open("https://www.youtube.com", "_blank");
 }
 
 function parseYouTube(url) {
