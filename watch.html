@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Watch • J-TV</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+:root{
+  --panel:#5b2bd6;
+  --glow:#7c4dff;
+}
+
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  background:#000;
+  color:#fff;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
+  cursor: default; /* 👈 FORCE CURSOR ONLY HERE */
+}
+
+/* TOP BAR */
+#topbar{
+  position:fixed;
+  top:0;
+  left:0;
+  right:0;
+  height:56px;
+  background:rgba(0,0,0,.85);
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:0 12px;
+  z-index:100;
+}
+
+#back{
+  background:var(--panel);
+  border:none;
+  color:#fff;
+  padding:8px 14px;
+  border-radius:999px;
+  font-weight:700;
+  cursor:pointer;
+}
+
+#label{
+  font-weight:700;
+  letter-spacing:1px;
+  opacity:.9;
+}
+
+/* PLAYER */
+iframe{
+  margin-top:56px;
+  width:100%;
+  height:calc(100vh - 56px);
+  border:none;
+  background:#000;
+}
+</style>
+</head>
+
+<body>
+
+<div id="topbar">
+  <button id="back" onclick="goBack()">← Back</button>
+  <div id="label">Now Playing</div>
+</div>
+
+<iframe
+  id="player"
+  allow="autoplay; fullscreen"
+  allowfullscreen>
+</iframe>
+
+<script>
+const params = new URLSearchParams(location.search);
+const id = params.get("id");
+const type = params.get("type");
+
+if(!id || !type){
+  alert("Invalid media link");
+  history.back();
+}
+
+let src = "";
+
+if(type === "movie"){
+  src = `https://www.vidking.net/embed/movie/${id}?autoPlay=true`;
+}
+
+if(type === "tv"){
+  const season = params.get("season") || 1;
+  const episode = params.get("episode") || 1;
+  src = `https://www.vidking.net/embed/tv/${id}/${season}/${episode}?autoPlay=true&nextEpisode=true&episodeSelector=true`;
+}
+
+document.getElementById("player").src = src;
+
+function goBack(){
+  document.getElementById("player").src = "";
+  history.back();
+}
+</script>
+
+</body>
+</html>
