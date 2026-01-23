@@ -137,9 +137,8 @@ iframe{
     </select>
 
     <select id="language">
-      <option value="">Select Language</option>
+      <option value="">Select Supported Language</option>
       <option value="en">English</option>
-      <option value="fr">French</option>
     </select>
 
     <button id="go" onclick="loadLive()">Load Live</button>
@@ -158,10 +157,8 @@ MAP: country + language -> iframe URL
 Add/change sources here ONLY.
 */
 const LIVE_SOURCES = {
-  "US_en": "https://example.com/us-en-live",
-  "CA_en": "https://example.com/ca-en-live",
-  "UK_en": "https://example.com/uk-en-live",
-  "FR_fr": "https://example.com/fr-fr-live"
+  "US_en": "https://zhangboheng.github.io/Easy-Web-TV-M3u8/catalogues/langplay.html?tab=eng&title=English?tab=us&title=United%20States",
+  "CA_en": "https://zhangboheng.github.io/Easy-Web-TV-M3u8/catalogues/langplay.html?tab=eng&title=English%20?tab=ca&title=Canada",
 };
 
 function loadLive(){
