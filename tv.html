@@ -44,7 +44,6 @@ body{
   cursor:pointer;
   font-weight:600;
   white-space:nowrap;
-  touch-action:manipulation;
 }
 
 #controls button.active{
@@ -86,7 +85,6 @@ body{
   overflow:hidden;
   cursor:pointer;
   transition:.2s;
-  touch-action:manipulation;
 }
 
 .card:active{
@@ -105,56 +103,6 @@ body{
   font-weight:600;
   text-align:center;
 }
-
-/* PLAYER */
-#player{
-  display:none;
-  height:100vh;
-  position:relative;
-}
-
-#player iframe{
-  width:100%;
-  height:100%;
-  border:none;
-  background:#000;
-}
-
-/* BACK */
-#backPlayer{
-  position:fixed;
-  top:14px;
-  left:14px;
-  background:var(--panel);
-  border:none;
-  color:#fff;
-  padding:10px 14px;
-  border-radius:999px;
-  font-weight:600;
-  cursor:pointer;
-  z-index:20;
-  display:none;
-}
-
-/* OXYGEN HINT */
-#oxygenHint{
-  position:absolute;
-  bottom:140px;
-  right:160px;
-  z-index:15;
-  display:none;
-  pointer-events:none;
-}
-
-#oxygenHint .bubble{
-  background:#000;
-  padding:18px 22px;
-  border-radius:16px;
-  box-shadow:0 0 30px var(--glow);
-  font-size:16px;
-  font-weight:700;
-  max-width:360px;
-}
 </style>
 </head>
 
@@ -165,126 +113,97 @@ body{
   <button data-feed="trending" class="active">Trending</button>
   <button data-feed="popular">Popular</button>
   <button data-feed="top_rated">Top Rated</button>
-  <button data-feed="airing_today">Airing Today</button>
   <input id="search" placeholder="Search TV shows…" />
 </div>
 
 <div id="searchHint">
-  Not every TV show appears here — use <b>Search</b> to find any show.
+  Not every show appears here — use <b>Search</b> to find any show.
 </div>
 
 <div id="grid"></div>
 
-<div id="player">
-  <iframe
-    id="frame"
-    sandbox="allow-scripts allow-same-origin allow-forms"
-    allow="autoplay; fullscreen">
-  </iframe>
-
-  <div id="oxygenHint">
-    <div class="bubble">
-      Click <b>Select Source</b> (3rd icon)<br>
-      then choose <b>Lithium or Oxygen</b> for best quality Also For Episodes and Seasons (1st Icon) to Change
-    </div>
-  </div>
-</div>
-
-<button id="backPlayer">← Back</button>
-
 <script>
-const TMDB_KEY="670f376983f73b67d757e9a951a3a5a9";
-const IMG="https://image.tmdb.org/t/p/w500";
+const TMDB_KEY = "670f376983f73b67d757e9a951a3a5a9";
+const IMG = "https://image.tmdb.org/t/p/w500";
 
-const embedParams=new URLSearchParams({
-  autoPlay:"true",
-  nextEpisode:"true",
-  episodeSelector:"true"
-});
+const grid = document.getElementById("grid");
+const buttons = [...document.querySelectorAll("#controls button[data-feed]")];
+const search = document.getElementById("search");
+const searchHint = document.getElementById("searchHint");
 
-const grid=document.getElementById("grid");
-const controls=document.getElementById("controls");
-const buttons=[...document.querySelectorAll("#controls button[data-feed]")];
-const player=document.getElementById("player");
-const frame=document.getElementById("frame");
-const search=document.getElementById("search");
-const backPlayer=document.getElementById("backPlayer");
-const oxygenHint=document.getElementById("oxygenHint");
-const searchHint=document.getElementById("searchHint");
-
-document.getElementById("homeBtn").onclick=()=>location.href="main.html";
-backPlayer.onclick=exitPlayer;
+document.getElementById("homeBtn").onclick = () => location.href = "main.html";
 
 buttons.forEach(btn=>{
-  btn.addEventListener("click",()=>loadFeed(btn.dataset.feed));
+  btn.onclick = () => loadFeed(btn.dataset.feed);
 });
 
-search.addEventListener("keydown",e=>{
-  if(e.key==="Enter") doSearch();
+search.addEventListener("keydown", e=>{
+  if(e.key === "Enter") doSearch();
 });
 
-function clearGrid(){ grid.innerHTML=""; }
+function clearGrid(){
+  grid.innerHTML = "";
+}
 
 function setActive(feed){
-  buttons.forEach(b=>b.classList.toggle("active",b.dataset.feed===feed));
+  buttons.forEach(b => b.classList.toggle("active", b.dataset.feed === feed));
 }
 
 async function loadFeed(feed){
   setActive(feed);
   clearGrid();
-  search.value="";
+  search.value = "";
 
-  const url = feed==="trending"
-    ? `https://api.themoviedb.org/3/trending/tv/week?api_key=${TMDB_KEY}`
-    : `https://api.themoviedb.org/3/tv/${feed}?api_key=${TMDB_KEY}`;
+  const url = feed === "trending"
+    ? `https://api.themoviedb.org/3/trending/tv/week?api_key=${TMDB_KEY}&language=en-US`
+    : `https://api.themoviedb.org/3/tv/${feed}?api_key=${TMDB_KEY}&language=en-US`;
 
-  const res=await fetch(url);
-  const data=await res.json();
+  const res = await fetch(url);
+  const data = await res.json();
+
+  if(!data.results || !data.results.length){
+    grid.innerHTML = "<div style='opacity:.7'>No shows found</div>";
+    return;
+  }
+
   data.results.forEach(addCard);
 }
 
-function addCard(item){
-  if(!item.poster_path) return;
-  const c=document.createElement("div");
-  c.className="card";
-  c.innerHTML=`<img src="${IMG}${item.poster_path}"><div class="title">${item.name}</div>`;
-  c.addEventListener("click",()=>play(item.id));
+function addCard(show){
+  if(!show.poster_path) return;
+
+  const c = document.createElement("div");
+  c.className = "card";
+  c.innerHTML = `
+    <img src="${IMG}${show.poster_path}">
+    <div class="title">${show.name}</div>
+  `;
+
+  c.onclick = () => {
+    location.href = `watch.html?id=${show.id}&type=tv&season=1&episode=1`;
+  };
+
   grid.appendChild(c);
 }
 
 async function doSearch(){
-  const q=search.value.trim();
+  const q = search.value.trim();
   if(!q) return;
-  buttons.forEach(b=>b.classList.remove("active"));
+
+  buttons.forEach(b => b.classList.remove("active"));
   clearGrid();
 
-  const res=await fetch(
-    `https://api.themoviedb.org/3/search/tv?api_key=${TMDB_KEY}&query=${encodeURIComponent(q)}`
+  const res = await fetch(
+    `https://api.themoviedb.org/3/search/tv?api_key=${TMDB_KEY}&query=${encodeURIComponent(q)}&language=en-US`
   );
-  const data=await res.json();
+  const data = await res.json();
+
+  if(!data.results || !data.results.length){
+    grid.innerHTML = "<div style='opacity:.7'>No shows found</div>";
+    return;
+  }
+
   data.results.forEach(addCard);
-}
-
-function play(id){
-  grid.style.display="none";
-  controls.style.display="none";
-  searchHint.style.display="none";
-  player.style.display="block";
-  backPlayer.style.display="block";
-
-  frame.src=`https://www.vidking.net/embed/tv/${id}/1/1?${embedParams.toString()}`;
-
-  oxygenHint.style.display="block";
-  setTimeout(()=>oxygenHint.style.display="none",7000);
-}
-
-function exitPlayer(){
-  frame.src="";
-  player.style.display="none";
-  backPlayer.style.display="none";
-  grid.style.display="grid";
-  controls.style.display="flex";
-  searchHint.style.display="block";
 }
 
 loadFeed("trending");
