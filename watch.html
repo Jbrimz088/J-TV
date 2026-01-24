@@ -6,19 +6,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-:root{
-  --panel:#5b2bd6;
-}
-
-*{box-sizing:border-box}
-
 body{
   margin:0;
   background:#000;
   color:#fff;
   font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
-  cursor: default;
   overflow:hidden;
+}
+
+/* FORCE FOCUS */
+html, body {
+  outline:none;
 }
 
 /* TOP BAR */
@@ -26,22 +24,20 @@ body{
   position:fixed;
   top:0; left:0; right:0;
   height:56px;
-  background:rgba(0,0,0,.85);
+  background:rgba(0,0,0,.9);
   display:flex;
   align-items:center;
-  gap:12px;
   padding:0 12px;
   z-index:100;
 }
 
 #back{
-  background:var(--panel);
+  background:#5b2bd6;
   border:none;
   color:#fff;
-  padding:8px 14px;
+  padding:10px 16px;
   border-radius:999px;
   font-weight:700;
-  cursor:pointer;
 }
 
 /* PLAYER */
@@ -50,19 +46,18 @@ iframe{
   width:100%;
   height:calc(100vh - 56px);
   border:none;
-  background:#000;
 }
 
-/* TV CURSOR */
+/* 🔴 TV CURSOR (ALWAYS VISIBLE) */
 #tvCursor{
   position:fixed;
-  width:18px;
-  height:18px;
-  background:#fff;
+  width:26px;
+  height:26px;
+  border:3px solid #fff;
   border-radius:50%;
-  box-shadow:0 0 10px #000;
+  background:rgba(255,255,255,.15);
+  z-index:99999;
   pointer-events:none;
-  z-index:9999;
   left:50%;
   top:50%;
   transform:translate(-50%,-50%);
@@ -70,69 +65,72 @@ iframe{
 </style>
 </head>
 
-<body>
+<body tabindex="0">
 
 <div id="topbar">
   <button id="back" onclick="goBack()">← Back</button>
 </div>
 
-<iframe
-  id="player"
-  allow="autoplay; fullscreen"
-  allowfullscreen>
-</iframe>
+<iframe id="player" allowfullscreen allow="autoplay"></iframe>
 
-<!-- TV CURSOR -->
 <div id="tvCursor"></div>
 
 <script>
-/* ---------- LOAD VIDEO ---------- */
-const params = new URLSearchParams(location.search);
-const id = params.get("id");
-const type = params.get("type");
+/* FORCE FOCUS SO KEYS WORK */
+document.body.focus();
 
-let src = "";
+/* LOAD VIDEO */
+const p = new URLSearchParams(location.search);
+const id = p.get("id");
+const type = p.get("type");
 
-if(type === "movie"){
-  src = `https://www.vidking.net/embed/movie/${id}?autoPlay=true`;
+let src="";
+if(type==="movie"){
+  src=`https://www.vidking.net/embed/movie/${id}?autoPlay=true`;
+}else if(type==="tv"){
+  const s=p.get("season")||1;
+  const e=p.get("episode")||1;
+  src=`https://www.vidking.net/embed/tv/${id}/${s}/${e}?autoPlay=true&nextEpisode=true&episodeSelector=true`;
 }
+document.getElementById("player").src=src;
 
-if(type === "tv"){
-  const season = params.get("season") || 1;
-  const episode = params.get("episode") || 1;
-  src = `https://www.vidking.net/embed/tv/${id}/${season}/${episode}?autoPlay=true&nextEpisode=true&episodeSelector=true`;
-}
-
-document.getElementById("player").src = src;
-
-/* ---------- BACK ---------- */
+/* BACK */
 function goBack(){
   document.getElementById("player").src="";
   history.back();
 }
 
-/* ---------- TV CURSOR LOGIC ---------- */
-const cursor = document.getElementById("tvCursor");
-let x = window.innerWidth / 2;
-let y = window.innerHeight / 2;
-const speed = 18;
+/* CURSOR LOGIC */
+const cursor=document.getElementById("tvCursor");
+let x=window.innerWidth/2;
+let y=window.innerHeight/2;
+const speed=24;
 
-function moveCursor(dx, dy){
-  x = Math.max(0, Math.min(window.innerWidth, x + dx));
-  y = Math.max(0, Math.min(window.innerHeight, y + dy));
-  cursor.style.left = x + "px";
-  cursor.style.top = y + "px";
+function draw(){
+  cursor.style.left=x+"px";
+  cursor.style.top=y+"px";
 }
 
-/* D-PAD SUPPORT */
-document.addEventListener("keydown", e => {
-  switch(e.key){
-    case "ArrowUp": moveCursor(0, -speed); break;
-    case "ArrowDown": moveCursor(0, speed); break;
-    case "ArrowLeft": moveCursor(-speed, 0); break;
-    case "ArrowRight": moveCursor(speed, 0); break;
-  }
+/* MOVE ON ANY KEY */
+document.addEventListener("keydown",e=>{
+  if(e.key==="ArrowUp") y-=speed;
+  if(e.key==="ArrowDown") y+=speed;
+  if(e.key==="ArrowLeft") x-=speed;
+  if(e.key==="ArrowRight") x+=speed;
+  x=Math.max(0,Math.min(window.innerWidth,x));
+  y=Math.max(0,Math.min(window.innerHeight,y));
+  draw();
 });
+
+/* MOVE ON TOUCH (FIRE TV REMOTES SOMETIMES SEND THIS) */
+document.addEventListener("mousemove",e=>{
+  x=e.clientX;
+  y=e.clientY;
+  draw();
+});
+
+/* INITIAL DRAW */
+draw();
 </script>
 
 </body>
