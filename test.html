@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Movies • J-TV</title>
+<title>TV Shows • J-TV</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
@@ -113,83 +113,97 @@ body{
   <button data-feed="trending" class="active">Trending</button>
   <button data-feed="popular">Popular</button>
   <button data-feed="top_rated">Top Rated</button>
-  <button data-feed="now_playing">Now Playing</button>
-  <input id="search" placeholder="Search movies…" />
+  <input id="search" placeholder="Search TV shows…" />
 </div>
 
 <div id="searchHint">
-  Not every movie appears here — use <b>Search</b> to find any movie.
+  Not every show appears here — use <b>Search</b> to find any show.
 </div>
 
 <div id="grid"></div>
 
 <script>
-const TMDB_KEY="670f376983f73b67d757e9a951a3a5a9";
-const IMG="https://image.tmdb.org/t/p/w500";
+const TMDB_KEY = "670f376983f73b67d757e9a951a3a5a9";
+const IMG = "https://image.tmdb.org/t/p/w500";
 
-const grid=document.getElementById("grid");
-const buttons=[...document.querySelectorAll("#controls button[data-feed]")];
-const search=document.getElementById("search");
-const searchHint=document.getElementById("searchHint");
+const grid = document.getElementById("grid");
+const buttons = [...document.querySelectorAll("#controls button[data-feed]")];
+const search = document.getElementById("search");
+const searchHint = document.getElementById("searchHint");
 
-document.getElementById("homeBtn").onclick=()=>location.href="main.html";
+document.getElementById("homeBtn").onclick = () => location.href = "main.html";
 
 buttons.forEach(btn=>{
-  btn.addEventListener("click",()=>loadFeed(btn.dataset.feed));
+  btn.onclick = () => loadFeed(btn.dataset.feed);
 });
 
-search.addEventListener("keydown",e=>{
-  if(e.key==="Enter") doSearch();
+search.addEventListener("keydown", e=>{
+  if(e.key === "Enter") doSearch();
 });
 
-function clearGrid(){ grid.innerHTML=""; }
+function clearGrid(){
+  grid.innerHTML = "";
+}
 
 function setActive(feed){
-  buttons.forEach(b=>b.classList.toggle("active",b.dataset.feed===feed));
+  buttons.forEach(b => b.classList.toggle("active", b.dataset.feed === feed));
 }
 
 async function loadFeed(feed){
   setActive(feed);
   clearGrid();
-  search.value="";
+  search.value = "";
 
-  const url = feed==="trending"
-    ? `https://api.themoviedb.org/3/trending/movie/week?api_key=${TMDB_KEY}`
-    : `https://api.themoviedb.org/3/movie/${feed}?api_key=${TMDB_KEY}`;
+  const url = feed === "trending"
+    ? `https://api.themoviedb.org/3/trending/tv/week?api_key=${TMDB_KEY}&language=en-US`
+    : `https://api.themoviedb.org/3/tv/${feed}?api_key=${TMDB_KEY}&language=en-US`;
 
-  const res=await fetch(url);
-  const data=await res.json();
+  const res = await fetch(url);
+  const data = await res.json();
+
+  if(!data.results || !data.results.length){
+    grid.innerHTML = "<div style='opacity:.7'>No shows found</div>";
+    return;
+  }
+
   data.results.forEach(addCard);
 }
 
-function addCard(item){
-  if(!item.poster_path) return;
-  const c=document.createElement("div");
-  c.className="card";
-  c.innerHTML=`
-    <img src="${IMG}${item.poster_path}">
-    <div class="title">${item.title}</div>
+function addCard(show){
+  if(!show.poster_path) return;
+
+  const c = document.createElement("div");
+  c.className = "card";
+  c.innerHTML = `
+    <img src="${IMG}${show.poster_path}">
+    <div class="title">${show.name}</div>
   `;
-  c.onclick=()=>openMovie(item.id);
+
+  c.onclick = () => {
+    location.href = `watch.html?id=${show.id}&type=tv&season=1&episode=1`;
+  };
+
   grid.appendChild(c);
 }
 
 async function doSearch(){
-  const q=search.value.trim();
+  const q = search.value.trim();
   if(!q) return;
-  buttons.forEach(b=>b.classList.remove("active"));
+
+  buttons.forEach(b => b.classList.remove("active"));
   clearGrid();
 
-  const res=await fetch(
-    `https://api.themoviedb.org/3/search/movie?api_key=${TMDB_KEY}&query=${encodeURIComponent(q)}`
+  const res = await fetch(
+    `https://api.themoviedb.org/3/search/tv?api_key=${TMDB_KEY}&query=${encodeURIComponent(q)}&language=en-US`
   );
-  const data=await res.json();
-  data.results.forEach(addCard);
-}
+  const data = await res.json();
 
-/* 🔗 OPEN SEPARATE PAGE */
-function openMovie(id){
-  location.href = `watch.html?id=${id}&type=movie`;
+  if(!data.results || !data.results.length){
+    grid.innerHTML = "<div style='opacity:.7'>No shows found</div>";
+    return;
+  }
+
+  data.results.forEach(addCard);
 }
 
 loadFeed("trending");
