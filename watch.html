@@ -2,135 +2,212 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Watch • J-TV</title>
+<title>TV Shows • J-TV</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
+:root{
+  --bg:#0b0b0f;
+  --card:#1b1b24;
+  --panel:#5b2bd6;
+  --glow:#7c4dff;
+}
+
+*{box-sizing:border-box}
+
 body{
   margin:0;
-  background:#000;
+  background:var(--bg);
   color:#fff;
   font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
-  overflow:hidden;
 }
 
-/* FORCE FOCUS */
-html, body {
-  outline:none;
-}
-
-/* TOP BAR */
-#topbar{
-  position:fixed;
-  top:0; left:0; right:0;
-  height:56px;
-  background:rgba(0,0,0,.9);
+/* CONTROLS */
+#controls{
+  position:sticky;
+  top:0;
+  z-index:5;
+  background:#000;
+  padding:10px;
   display:flex;
+  gap:8px;
+  flex-wrap:wrap;
   align-items:center;
-  padding:0 12px;
-  z-index:100;
 }
 
-#back{
-  background:#5b2bd6;
+#controls button{
+  background:var(--card);
   border:none;
   color:#fff;
-  padding:10px 16px;
+  padding:8px 12px;
   border-radius:999px;
-  font-weight:700;
+  cursor:pointer;
+  font-weight:600;
+  white-space:nowrap;
 }
 
-/* PLAYER */
-iframe{
-  margin-top:56px;
-  width:100%;
-  height:calc(100vh - 56px);
+#controls button.active{
+  background:var(--panel);
+}
+
+#search{
+  flex:1 1 160px;
+  min-width:140px;
+  background:#111;
   border:none;
+  color:#fff;
+  padding:8px 12px;
+  border-radius:999px;
 }
 
-/* 🔴 TV CURSOR (ALWAYS VISIBLE) */
-#tvCursor{
-  position:fixed;
-  width:26px;
-  height:26px;
-  border:3px solid #fff;
-  border-radius:50%;
-  background:rgba(255,255,255,.15);
-  z-index:99999;
-  pointer-events:none;
-  left:50%;
-  top:50%;
-  transform:translate(-50%,-50%);
+/* SEARCH MESSAGE */
+#searchHint{
+  background:#000;
+  margin:10px;
+  padding:14px 16px;
+  border-radius:14px;
+  box-shadow:0 0 20px var(--glow);
+  font-size:14px;
+  font-weight:600;
+}
+
+/* GRID */
+#grid{
+  padding:20px;
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
+  gap:16px;
+}
+
+.card{
+  background:var(--card);
+  border-radius:12px;
+  overflow:hidden;
+  cursor:pointer;
+  transition:.2s;
+}
+
+.card:active{
+  transform:scale(.98);
+}
+
+.card img{
+  width:100%;
+  height:240px;
+  object-fit:cover;
+}
+
+.card .title{
+  padding:8px;
+  font-size:14px;
+  font-weight:600;
+  text-align:center;
 }
 </style>
 </head>
 
-<body tabindex="0">
+<body>
 
-<div id="topbar">
-  <button id="back" onclick="goBack()">← Back</button>
+<div id="controls">
+  <button id="homeBtn">Home</button>
+  <button data-feed="trending" class="active">Trending</button>
+  <button data-feed="popular">Popular</button>
+  <button data-feed="top_rated">Top Rated</button>
+  <input id="search" placeholder="Search TV shows…" />
 </div>
 
-<iframe id="player" allowfullscreen allow="autoplay"></iframe>
+<div id="searchHint">
+  Not every show appears here — use <b>Search</b> to find any show.
+</div>
 
-<div id="tvCursor"></div>
+<div id="grid"></div>
 
 <script>
-/* FORCE FOCUS SO KEYS WORK */
-document.body.focus();
+const TMDB_KEY = "670f376983f73b67d757e9a951a3a5a9";
+const IMG = "https://image.tmdb.org/t/p/w500";
 
-/* LOAD VIDEO */
-const p = new URLSearchParams(location.search);
-const id = p.get("id");
-const type = p.get("type");
+const grid = document.getElementById("grid");
+const buttons = [...document.querySelectorAll("#controls button[data-feed]")];
+const search = document.getElementById("search");
+const searchHint = document.getElementById("searchHint");
 
-let src="";
-if(type==="movie"){
-  src=`https://www.vidking.net/embed/movie/${id}?autoPlay=true`;
-}else if(type==="tv"){
-  const s=p.get("season")||1;
-  const e=p.get("episode")||1;
-  src=`https://www.vidking.net/embed/tv/${id}/${s}/${e}?autoPlay=true&nextEpisode=true&episodeSelector=true`;
-}
-document.getElementById("player").src=src;
+document.getElementById("homeBtn").onclick = () => location.href = "main.html";
 
-/* BACK */
-function goBack(){
-  document.getElementById("player").src="";
-  history.back();
-}
-
-/* CURSOR LOGIC */
-const cursor=document.getElementById("tvCursor");
-let x=window.innerWidth/2;
-let y=window.innerHeight/2;
-const speed=24;
-
-function draw(){
-  cursor.style.left=x+"px";
-  cursor.style.top=y+"px";
-}
-
-/* MOVE ON ANY KEY */
-document.addEventListener("keydown",e=>{
-  if(e.key==="ArrowUp") y-=speed;
-  if(e.key==="ArrowDown") y+=speed;
-  if(e.key==="ArrowLeft") x-=speed;
-  if(e.key==="ArrowRight") x+=speed;
-  x=Math.max(0,Math.min(window.innerWidth,x));
-  y=Math.max(0,Math.min(window.innerHeight,y));
-  draw();
+buttons.forEach(btn=>{
+  btn.onclick = () => loadFeed(btn.dataset.feed);
 });
 
-/* MOVE ON TOUCH (FIRE TV REMOTES SOMETIMES SEND THIS) */
-document.addEventListener("mousemove",e=>{
-  x=e.clientX;
-  y=e.clientY;
-  draw();
+search.addEventListener("keydown", e=>{
+  if(e.key === "Enter") doSearch();
 });
 
-/* INITIAL DRAW */
-draw();
+function clearGrid(){
+  grid.innerHTML = "";
+}
+
+function setActive(feed){
+  buttons.forEach(b => b.classList.toggle("active", b.dataset.feed === feed));
+}
+
+async function loadFeed(feed){
+  setActive(feed);
+  clearGrid();
+  search.value = "";
+
+  const url = feed === "trending"
+    ? `https://api.themoviedb.org/3/trending/tv/week?api_key=${TMDB_KEY}&language=en-US`
+    : `https://api.themoviedb.org/3/tv/${feed}?api_key=${TMDB_KEY}&language=en-US`;
+
+  const res = await fetch(url);
+  const data = await res.json();
+
+  if(!data.results || !data.results.length){
+    grid.innerHTML = "<div style='opacity:.7'>No shows found</div>";
+    return;
+  }
+
+  data.results.forEach(addCard);
+}
+
+function addCard(show){
+  if(!show.poster_path) return;
+
+  const c = document.createElement("div");
+  c.className = "card";
+  c.innerHTML = `
+    <img src="${IMG}${show.poster_path}">
+    <div class="title">${show.name}</div>
+  `;
+
+  c.onclick = () => {
+    location.href = `watch.html?id=${show.id}&type=tv&season=1&episode=1`;
+  };
+
+  grid.appendChild(c);
+}
+
+async function doSearch(){
+  const q = search.value.trim();
+  if(!q) return;
+
+  buttons.forEach(b => b.classList.remove("active"));
+  clearGrid();
+
+  const res = await fetch(
+    `https://api.themoviedb.org/3/search/tv?api_key=${TMDB_KEY}&query=${encodeURIComponent(q)}&language=en-US`
+  );
+  const data = await res.json();
+
+  if(!data.results || !data.results.length){
+    grid.innerHTML = "<div style='opacity:.7'>No shows found</div>";
+    return;
+  }
+
+  data.results.forEach(addCard);
+}
+
+loadFeed("trending");
+setTimeout(()=>searchHint.style.display="none",5000);
 </script>
 
 </body>
