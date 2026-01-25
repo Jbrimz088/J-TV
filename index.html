@@ -93,6 +93,19 @@ NO kick logic here
 
 const WORKER = "https://black-wildflower-8690.jcbrimley.workers.dev/";
 
+/* restore saved credentials (NO auto login) */
+window.addEventListener("DOMContentLoaded", () => {
+  const savedUser = localStorage.getItem("jtv_saved_user");
+  const savedPass = localStorage.getItem("jtv_saved_pass");
+
+  if(savedUser){
+    document.getElementById("userInput").value = savedUser;
+  }
+  if(savedPass){
+    document.getElementById("passInput").value = savedPass;
+  }
+});
+
 async function login(){
   const username = document.getElementById("userInput").value.trim();
   const password = document.getElementById("passInput").value.trim();
@@ -118,6 +131,10 @@ async function login(){
     const data = await res.json();
 
     if(data.ok){
+      // remember credentials on this device ONLY
+      localStorage.setItem("jtv_saved_user", username);
+      localStorage.setItem("jtv_saved_pass", password);
+
       localStorage.setItem("jtv_access", "true");
       localStorage.setItem("jtv_version", data.version);
       localStorage.setItem("jtv_user", data.user || username);
