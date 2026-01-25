@@ -93,18 +93,32 @@ NO kick logic here
 
 const WORKER = "https://black-wildflower-8690.jcbrimley.workers.dev/";
 
-/* restore saved credentials (NO auto login) */
-window.addEventListener("DOMContentLoaded", () => {
+/* -------- RESTORE SAVED CREDENTIALS (Fire TV safe) -------- */
+function restoreSavedCredentials(){
+  const userEl = document.getElementById("userInput");
+  const passEl = document.getElementById("passInput");
+  if(!userEl || !passEl) return;
+
   const savedUser = localStorage.getItem("jtv_saved_user");
   const savedPass = localStorage.getItem("jtv_saved_pass");
 
-  if(savedUser){
-    document.getElementById("userInput").value = savedUser;
-  }
-  if(savedPass){
-    document.getElementById("passInput").value = savedPass;
+  if(savedUser) userEl.value = savedUser;
+  if(savedPass) passEl.value = savedPass;
+}
+
+// initial load
+window.addEventListener("DOMContentLoaded", restoreSavedCredentials);
+
+// back navigation / WebView restore
+window.addEventListener("pageshow", restoreSavedCredentials);
+
+// app resume / visibility regain
+document.addEventListener("visibilitychange", () => {
+  if(!document.hidden){
+    restoreSavedCredentials();
   }
 });
+/* --------------------------------------------------------- */
 
 async function login(){
   const username = document.getElementById("userInput").value.trim();
@@ -131,7 +145,7 @@ async function login(){
     const data = await res.json();
 
     if(data.ok){
-      // remember credentials on this device ONLY
+      // remember credentials on THIS device only
       localStorage.setItem("jtv_saved_user", username);
       localStorage.setItem("jtv_saved_pass", password);
 
