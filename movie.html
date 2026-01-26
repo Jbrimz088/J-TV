@@ -162,11 +162,15 @@ body{
 
 <div id="controls">
   <button id="homeBtn">Home</button>
+  <button data-feed="trending" class="active">Trending</button>
+  <button data-feed="popular">Popular</button>
+  <button data-feed="top_rated">Top Rated</button>
+  <button data-feed="now_playing">Now Playing</button>
   <input id="search" placeholder="Search movies…" />
 </div>
 
 <div id="searchHint">
-  Movies you’ve watched on this account.
+  Not every movie appears here — use <b>Search</b> to find any movie.
 </div>
 
 <div id="grid"></div>
@@ -200,6 +204,7 @@ const embedParams=new URLSearchParams({
 
 const grid=document.getElementById("grid");
 const controls=document.getElementById("controls");
+const buttons=[...document.querySelectorAll("#controls button[data-feed]")];
 const player=document.getElementById("player");
 const frame=document.getElementById("frame");
 const search=document.getElementById("search");
@@ -207,11 +212,23 @@ const backPlayer=document.getElementById("backPlayer");
 const oxygenHint=document.getElementById("oxygenHint");
 const searchHint=document.getElementById("searchHint");
 
-const user = localStorage.getItem("jtv_user") || "guest";
-const HISTORY_KEY = `jtv_history_movies_${user}`;
+let currentFeed="trending";
+let currentPage=1;
+let loading=false;
+let searchMode=false;
 
 document.getElementById("homeBtn").onclick=()=>location.href="main.html";
 backPlayer.onclick=exitPlayer;
+
+buttons.forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    searchMode=false;
+    currentFeed=btn.dataset.feed;
+    currentPage=1;
+    clearGrid();
+    loadFeed();
+  });
+});
 
 search.addEventListener("keydown",e=>{
   if(e.key==="Enter") doSearch();
@@ -219,28 +236,27 @@ search.addEventListener("keydown",e=>{
 
 function clearGrid(){ grid.innerHTML=""; }
 
-function getHistory(){
-  try{
-    return JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
-  }catch{
-    return [];
-  }
+function setActive(feed){
+  buttons.forEach(b=>b.classList.toggle("active",b.dataset.feed===feed));
 }
 
-function saveToHistory(id){
-  const h = getHistory().filter(x=>x!==id);
-  h.unshift(id);
-  localStorage.setItem(HISTORY_KEY, JSON.stringify(h.slice(0,200)));
-}
+async function loadFeed(){
+  if(loading) return;
+  loading=true;
 
-async function loadHistory(){
-  clearGrid();
-  const history = getHistory();
-  for(const id of history){
-    const res = await fetch(`https://api.themoviedb.org/3/movie/${id}?api_key=${TMDB_KEY}`);
-    const item = await res.json();
-    addCard(item);
-  }
+  setActive(currentFeed);
+  search.value="";
+
+  const url = currentFeed==="trending"
+    ? `https://api.themoviedb.org/3/trending/movie/week?api_key=${TMDB_KEY}&page=${currentPage}`
+    : `https://api.themoviedb.org/3/movie/${currentFeed}?api_key=${TMDB_KEY}&page=${currentPage}`;
+
+  const res=await fetch(url);
+  const data=await res.json();
+  data.results.forEach(addCard);
+
+  currentPage++;
+  loading=false;
 }
 
 function addCard(item){
@@ -255,18 +271,30 @@ function addCard(item){
 async function doSearch(){
   const q=search.value.trim();
   if(!q) return;
+
+  searchMode=true;
+  currentPage=1;
   clearGrid();
+  buttons.forEach(b=>b.classList.remove("active"));
+
+  await loadSearch(q);
+}
+
+async function loadSearch(q){
+  if(loading) return;
+  loading=true;
 
   const res=await fetch(
-    `https://api.themoviedb.org/3/search/movie?api_key=${TMDB_KEY}&query=${encodeURIComponent(q)}`
+    `https://api.themoviedb.org/3/search/movie?api_key=${TMDB_KEY}&query=${encodeURIComponent(q)}&page=${currentPage}`
   );
   const data=await res.json();
   data.results.forEach(addCard);
+
+  currentPage++;
+  loading=false;
 }
 
 function play(id){
-  saveToHistory(id);
-
   grid.style.display="none";
   controls.style.display="none";
   searchHint.style.display="none";
@@ -288,7 +316,16 @@ function exitPlayer(){
   searchHint.style.display="block";
 }
 
-loadHistory();
+/* infinite scroll */
+window.addEventListener("scroll",()=>{
+  if(player.style.display==="block") return;
+  if(window.innerHeight + window.scrollY >= document.body.offsetHeight - 600){
+    searchMode ? loadSearch(search.value.trim()) : loadFeed();
+  }
+});
+
+loadFeed();
+setTimeout(()=>searchHint.style.display="none",5000);
 </script>
 
 </body>
