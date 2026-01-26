@@ -162,15 +162,11 @@ body{
 
 <div id="controls">
   <button id="homeBtn">Home</button>
-  <button data-feed="trending" class="active">Trending</button>
-  <button data-feed="popular">Popular</button>
-  <button data-feed="top_rated">Top Rated</button>
-  <button data-feed="now_playing">Now Playing</button>
   <input id="search" placeholder="Search movies…" />
 </div>
 
 <div id="searchHint">
-  Not every movie appears here — use <b>Search</b> to find any movie.
+  Movies you’ve watched on this account.
 </div>
 
 <div id="grid"></div>
@@ -204,7 +200,6 @@ const embedParams=new URLSearchParams({
 
 const grid=document.getElementById("grid");
 const controls=document.getElementById("controls");
-const buttons=[...document.querySelectorAll("#controls button[data-feed]")];
 const player=document.getElementById("player");
 const frame=document.getElementById("frame");
 const search=document.getElementById("search");
@@ -212,12 +207,11 @@ const backPlayer=document.getElementById("backPlayer");
 const oxygenHint=document.getElementById("oxygenHint");
 const searchHint=document.getElementById("searchHint");
 
+const user = localStorage.getItem("jtv_user") || "guest";
+const HISTORY_KEY = `jtv_history_movies_${user}`;
+
 document.getElementById("homeBtn").onclick=()=>location.href="main.html";
 backPlayer.onclick=exitPlayer;
-
-buttons.forEach(btn=>{
-  btn.addEventListener("click",()=>loadFeed(btn.dataset.feed));
-});
 
 search.addEventListener("keydown",e=>{
   if(e.key==="Enter") doSearch();
@@ -225,22 +219,28 @@ search.addEventListener("keydown",e=>{
 
 function clearGrid(){ grid.innerHTML=""; }
 
-function setActive(feed){
-  buttons.forEach(b=>b.classList.toggle("active",b.dataset.feed===feed));
+function getHistory(){
+  try{
+    return JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
+  }catch{
+    return [];
+  }
 }
 
-async function loadFeed(feed){
-  setActive(feed);
+function saveToHistory(id){
+  const h = getHistory().filter(x=>x!==id);
+  h.unshift(id);
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(h.slice(0,200)));
+}
+
+async function loadHistory(){
   clearGrid();
-  search.value="";
-
-  const url = feed==="trending"
-    ? `https://api.themoviedb.org/3/trending/movie/week?api_key=${TMDB_KEY}`
-    : `https://api.themoviedb.org/3/movie/${feed}?api_key=${TMDB_KEY}`;
-
-  const res=await fetch(url);
-  const data=await res.json();
-  data.results.forEach(addCard);
+  const history = getHistory();
+  for(const id of history){
+    const res = await fetch(`https://api.themoviedb.org/3/movie/${id}?api_key=${TMDB_KEY}`);
+    const item = await res.json();
+    addCard(item);
+  }
 }
 
 function addCard(item){
@@ -255,7 +255,6 @@ function addCard(item){
 async function doSearch(){
   const q=search.value.trim();
   if(!q) return;
-  buttons.forEach(b=>b.classList.remove("active"));
   clearGrid();
 
   const res=await fetch(
@@ -266,6 +265,8 @@ async function doSearch(){
 }
 
 function play(id){
+  saveToHistory(id);
+
   grid.style.display="none";
   controls.style.display="none";
   searchHint.style.display="none";
@@ -287,8 +288,7 @@ function exitPlayer(){
   searchHint.style.display="block";
 }
 
-loadFeed("trending");
-setTimeout(()=>searchHint.style.display="none",5000);
+loadHistory();
 </script>
 
 </body>
