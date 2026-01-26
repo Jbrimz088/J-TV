@@ -131,10 +131,22 @@ const buttons = [...document.querySelectorAll("#controls button[data-feed]")];
 const search = document.getElementById("search");
 const searchHint = document.getElementById("searchHint");
 
+let currentFeed = "trending";
+let currentPage = 1;
+let loading = false;
+let searchMode = false;
+let currentQuery = "";
+
 document.getElementById("homeBtn").onclick = () => location.href = "main.html";
 
 buttons.forEach(btn=>{
-  btn.onclick = () => loadFeed(btn.dataset.feed);
+  btn.onclick = () => {
+    searchMode = false;
+    currentFeed = btn.dataset.feed;
+    currentPage = 1;
+    clearGrid();
+    loadFeed();
+  };
 });
 
 search.addEventListener("keydown", e=>{
@@ -149,24 +161,26 @@ function setActive(feed){
   buttons.forEach(b => b.classList.toggle("active", b.dataset.feed === feed));
 }
 
-async function loadFeed(feed){
-  setActive(feed);
-  clearGrid();
+async function loadFeed(){
+  if(loading) return;
+  loading = true;
+
+  setActive(currentFeed);
   search.value = "";
 
-  const url = feed === "trending"
-    ? `https://api.themoviedb.org/3/trending/tv/week?api_key=${TMDB_KEY}&language=en-US`
-    : `https://api.themoviedb.org/3/tv/${feed}?api_key=${TMDB_KEY}&language=en-US`;
+  const url = currentFeed === "trending"
+    ? `https://api.themoviedb.org/3/trending/tv/week?api_key=${TMDB_KEY}&language=en-US&page=${currentPage}`
+    : `https://api.themoviedb.org/3/tv/${currentFeed}?api_key=${TMDB_KEY}&language=en-US&page=${currentPage}`;
 
   const res = await fetch(url);
   const data = await res.json();
 
-  if(!data.results || !data.results.length){
-    grid.innerHTML = "<div style='opacity:.7'>No shows found</div>";
-    return;
+  if(data.results){
+    data.results.forEach(addCard);
+    currentPage++;
   }
 
-  data.results.forEach(addCard);
+  loading = false;
 }
 
 function addCard(show){
@@ -190,23 +204,40 @@ async function doSearch(){
   const q = search.value.trim();
   if(!q) return;
 
-  buttons.forEach(b => b.classList.remove("active"));
+  searchMode = true;
+  currentQuery = q;
+  currentPage = 1;
   clearGrid();
+  buttons.forEach(b => b.classList.remove("active"));
+
+  await loadSearch();
+}
+
+async function loadSearch(){
+  if(loading) return;
+  loading = true;
 
   const res = await fetch(
-    `https://api.themoviedb.org/3/search/tv?api_key=${TMDB_KEY}&query=${encodeURIComponent(q)}&language=en-US`
+    `https://api.themoviedb.org/3/search/tv?api_key=${TMDB_KEY}&query=${encodeURIComponent(currentQuery)}&language=en-US&page=${currentPage}`
   );
   const data = await res.json();
 
-  if(!data.results || !data.results.length){
-    grid.innerHTML = "<div style='opacity:.7'>No shows found</div>";
-    return;
+  if(data.results){
+    data.results.forEach(addCard);
+    currentPage++;
   }
 
-  data.results.forEach(addCard);
+  loading = false;
 }
 
-loadFeed("trending");
+/* infinite scroll */
+window.addEventListener("scroll", ()=>{
+  if(window.innerHeight + window.scrollY >= document.body.offsetHeight - 600){
+    searchMode ? loadSearch() : loadFeed();
+  }
+});
+
+loadFeed();
 setTimeout(()=>searchHint.style.display="none",5000);
 </script>
 
